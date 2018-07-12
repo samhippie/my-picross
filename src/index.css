@@ -1,0 +1,139 @@
+body {
+	background-color: #EEEEEE;
+	padding: 20px;
+	margin: 0;
+}
+
+h1, h2, p, ul, li {
+	font-family: sans-serif;
+}
+
+ul.header li {
+	display: inline;
+	list-style-type: none;
+	margin: 0;
+}
+
+ul.header {
+	background-color: #DDDDDD;
+	padding: 0;
+}
+
+ul.header li a {
+	color: #000000;
+	font-weight: bold;
+	text-decoration: none;
+	padding: 20px;
+	display: inline-block;
+}
+
+.content {
+	background-color: #DDDDDD;
+	padding: 20px;
+}
+
+.content h2 {
+	padding: 0;
+	margin: 0;
+}
+
+.content li {
+	margin-bottom: 10px;
+}
+
+.board-row:after {
+	clear: both;
+	content: "";
+	display: table;
+}
+
+.square {
+	background: #FFFFFF;
+	border: 1px solid #000000;
+	float: left;
+	font-size: 24px;
+	font-weight: bold;
+	line-height: 34px;
+	height: 34px;
+	margin-right: -1px;
+	margin-top: -1px;
+	padding: 0;
+	text-align: center;
+	width: 34px;
+}
+
+.count-square-col ul, .count-square-col li {
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.count-square-row ul {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+
+.count-square-row li {
+	padding: 4px;
+	margin: 0;
+	/*list-style-position: outside;*/
+	display: inline-block;
+	text-align: center;
+	text-decoration: none;
+}
+
+.count-square-col {
+	background: #DDDDDD;
+	border: 1px solid #000000;
+	float: left;
+	font-size: 12px;
+	line-height: 34px;
+	/*height: 34px;*/
+	margin-right: -1px;
+	margin-top: -1px;
+	padding: 0;
+	text-align: center;
+	width: 34px;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	max-width: 34px;
+	outline: none;
+}
+
+.count-square-row {
+	background: #DDDDDD;
+	border: 1px solid #000000;
+	float: left;
+	font-size: 12px;
+	line-height: 34px;
+	height: 34px;
+	margin-right: -1px;
+	margin-top: -1px;
+	padding: 0;
+	text-align: right;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	outline: none;
+}
+
+
+.square:focus {
+	outline: none;
+}
+
+.kbd-navigation .square:focus {
+	background: #ddd;
+}
+
+.game {
+	display: flex;
+	flex-direction: row;
+}
+.game-info {
+	margin-left: 20px;
+}
