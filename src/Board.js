@@ -33,7 +33,8 @@ class Square extends Component {
 }
 
 class CountSquare extends Component {
-	renderText(color, text, key) {
+	renderText(colorIndex, text, key) {
+		const color = this.props.colors[colorIndex];
 		return (
 			<li
 				key={key}
@@ -50,9 +51,9 @@ class CountSquare extends Component {
 								: "count-square-col"}>
 				<ul>
 				{this.props.values.filter(value => {
-					return this.props.blankColor !== value.color;
+					return this.props.blankColor !== value.colorIndex;
 				}).map((value, index) => {
-					return this.renderText(value.color, value.count, index)
+					return this.renderText(value.colorIndex, value.count, index)
 				})}
 				</ul>
 			</div>
@@ -65,10 +66,7 @@ class Board extends Component {
 		super(props);
 		const width = props.width;
 		const height = props.height || 15;
-		//const blankColor = props.blankColor || 0;
-		//const colors = props.colors || ['white', 'black'];
 		const squares = props.squares || Array(width * height).fill(props.blankColor);
-		//const useHcpRules = props.useHcpRules || false;
 		const blockSize = props.blockSize || 5;
 		this.state = {
 			width: width,
@@ -77,10 +75,6 @@ class Board extends Component {
 			squares: squares,
 			rowCounts: Array(height).fill(null),
 			colCounts: Array(width).fill(null),
-			//colors: colors,
-			//currentColor: 1,
-			//blankColor: blankColor,
-			//useHcpRules: useHcpRules,
 		}
 
 		//init row counts
@@ -169,7 +163,7 @@ class Board extends Component {
 	renderRow(r) {
 		//render all the squares, and then render the row's count squares
 		return (
-			<div className="board-row">
+			<div key= {r} className="board-row">
 				{Array.from({length: this.state.width}, (x,i) => this.renderSquare(r*this.state.width + i))}
 				{this.renderCountSquare(true, r)}
 			</div>
@@ -181,7 +175,8 @@ class Board extends Component {
 			<CountSquare 
 				key={(isRow? 1 : -1) * i}
 				isRow={isRow}
-				blankColor={this.props.colors[this.props.blankColor]}
+				blankColor={this.props.blankColor}
+				colors={this.props.colors}
 				values={isRow 
 					? this.state.rowCounts[i] 
 					: this.state.colCounts[i]
@@ -204,7 +199,7 @@ class Board extends Component {
 
 	render() {
 		return (
-			<div>
+			<div className="board">
 				{Array.from({length: this.state.height}, (x,i) => this.renderRow(i))}
 				{this.renderColCounts()}
 			</div>
@@ -224,7 +219,7 @@ function getRowNumbers(colorMap, row) {
 		} else {
 			if (cur !== null) {
 				nums.push({
-					color: colorMap[cur], 
+					colorIndex: cur, 
 					count: curCount,
 				});
 			}
@@ -234,7 +229,7 @@ function getRowNumbers(colorMap, row) {
 	});
 	//still have to add the last string
 	nums.push({
-		color: colorMap[cur],
+		colorIndex: cur,
 		count: curCount,
 	});
 	return nums

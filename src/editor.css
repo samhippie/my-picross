@@ -5,4 +5,69 @@
 
 .size-input input {
 	padding: 4px;
+	margin-right: 4px;
+}
+
+.color-board-row {
+	display: flex;
+	flex-direction: row;
+}
+
+.color-picker {
+	margin-right: 4px;
+}
+
+ul.color-picker {
+	padding-left: 4px;
+}
+
+.color-picker li {
+	list-style: none;
+}
+
+.color-modal-backdrop {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: rgba(0,0,0,0.3);
+	padding: 50px;
+}
+
+.color-modal {
+	background-color: #FFFFFF;
+	border-radius: 5px;
+	margin: 30px auto;
+	padding: 30px;
+	max-width: 500px;
+}
+
+.color-modal p {
+	margin: 30 auto;
+}
+
+.color-button {
+	border: 1px solid #000000;
+	line-height: 34px;
+	height: 34px;
+	width: 34px;
+	margin-right: 4px;
+	padding: 0;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	cursor: pointer;
+}
+
+.color-edit-button {
+	border: none;
+	color: black;
+	background: none;
+	font-size: 16px;
+	cursor: pointer;
+}
+
+.color-add-button {
+	float: right;
 }

@@ -4,7 +4,7 @@ body {
 	margin: 0;
 }
 
-h1, h2, p, ul, li {
+h1, h2, p, ul, li, label {
 	font-family: sans-serif;
 }
 
@@ -30,6 +30,7 @@ ul.header li a {
 .content {
 	background-color: #DDDDDD;
 	padding: 20px;
+	white-space: nowrap;
 }
 
 .content h2 {
@@ -41,16 +42,35 @@ ul.header li a {
 	margin-bottom: 10px;
 }
 
+.board {
+	/*
+	display: table;
+	white-space: nowrap;
+	overflow: auto;
+	*/
+}
+
+.board-row {
+	/*
+	display: table-row;
+	white-space: nowrap;
+	overflow-x: scroll;
+	*/
+	display: flex;
+	flex-direction: row;
+}
+
+/*
 .board-row:after {
 	clear: both;
 	content: "";
 	display: table;
 }
+*/
 
 .square {
 	background: #FFFFFF;
 	border: 1px solid #000000;
-	float: left;
 	font-size: 24px;
 	font-weight: bold;
 	line-height: 34px;
@@ -60,6 +80,7 @@ ul.header li a {
 	padding: 0;
 	text-align: center;
 	width: 34px;
+	display: inline-block;
 }
 
 .count-square-col ul, .count-square-col li {
@@ -75,7 +96,8 @@ ul.header li a {
 }
 
 .count-square-row li {
-	padding: 4px;
+	padding-right: 4px;
+	padding-left: 4px;
 	margin: 0;
 	/*list-style-position: outside;*/
 	display: inline-block;
@@ -88,33 +110,33 @@ ul.header li a {
 	border: 1px solid #000000;
 	float: left;
 	font-size: 12px;
-	line-height: 34px;
-	/*height: 34px;*/
+	font-weight: bold;
 	margin-right: -1px;
 	margin-top: -1px;
 	padding: 0;
 	text-align: center;
 	width: 34px;
+	min-height: 34px;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
 	max-width: 34px;
 	outline: none;
+	display: inline-block;
 }
 
 .count-square-row {
 	background: #DDDDDD;
 	border: 1px solid #000000;
-	float: left;
 	font-size: 12px;
+	font-weight: bold;
 	line-height: 34px;
 	height: 34px;
+	min-width: 34px;
 	margin-right: -1px;
 	margin-top: -1px;
 	padding: 0;
-	text-align: right;
-	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
