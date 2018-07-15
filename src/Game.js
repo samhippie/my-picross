@@ -53,7 +53,7 @@ class EndModal extends Component {
 		return (
 			<div className="modal-backdrop">
 				<div className="modal">
-					<p>You have completed puzzle {this.props.name}</p>
+					<p>You have completed "{this.props.name}"</p>
 					<div className="modal-footer">
 						<button onClick={() => this.handleClose()}>
 							Close
@@ -185,7 +185,7 @@ class Game extends Component {
 }
 
 function getTestGameData() {
-	return "eyJ2ZXJzaW9uIjoxLCJ3aWR0aCI6IjUiLCJoZWlnaHQiOiI1IiwiY29sb3JzIjpbIndoaXRlIiwiYmxhY2siLCJibHVlIl0sImJsYW5rQ29sb3IiOjAsInVzZUhjcFJ1bGVzIjpmYWxzZSwic3F1YXJlcyI6WzEsMSwxLDEsMSwwLDEsMCwxLDAsMCwwLDIsMCwwLDIsMiwyLDIsMiwwLDAsMiwwLDBdfQ=="
+	return "eyJ2ZXJzaW9uIjoxLCJuYW1lIjoiVGVzdCBQdXp6bGUiLCJ3aWR0aCI6IjEwIiwiaGVpZ2h0IjoiMTAiLCJjb2xvcnMiOlsid2hpdGUiLCJibGFjayIsImJsdWUiXSwiYmxhbmtDb2xvciI6MCwidXNlSGNwUnVsZXMiOmZhbHNlLCJzcXVhcmVzIjpbMSwxLDEsMCwyLDIsMiwwLDAsMSwxLDAsMCwwLDIsMCwyLDAsMCwxLDEsMSwxLDAsMiwyLDIsMCwwLDEsMCwwLDEsMCwyLDAsMiwwLDAsMSwxLDEsMSwwLDIsMCwyLDAsMCwxLDEsMCwwLDAsMSwwLDAsMCwwLDEsMSwxLDAsMSwxLDAsMCwwLDAsMSwxLDAsMSwwLDEsMiwyLDIsMiwyLDEsMCwwLDAsMSwyLDIsMiwyLDIsMSwwLDAsMCwxLDIsMiwyLDIsMl19"
 }
 
 export default Game;

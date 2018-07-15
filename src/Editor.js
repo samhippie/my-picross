@@ -184,7 +184,14 @@ class Editor extends Component {
 			//used to control color editor modal
 			isColorModalOpen: false,
 			colorModalColor: null,
+			name: "Untitled",
 		}
+	}
+
+	handleNameChange(event) {
+		this.setState({
+			name: event.target.value,
+		});
 	}
 
 	//after the board itself is updated, we need to update the
@@ -260,7 +267,7 @@ class Editor extends Component {
 		//get all the important data together
 		const data = {
 			version: 1,
-			name: "TODO add name input",
+			name: this.state.name,
 			width: this.state.width,
 			height: this.state.height,
 			colors: this.state.colors,
@@ -275,6 +282,16 @@ class Editor extends Component {
 		console.log(encData);
 		console.log("end data dump");
 		alert("dumped game data to console");
+	}
+
+	renderNameInput() {
+		return (
+			<input 
+				type="text" 
+				value={this.state.name}
+				onChange={(e) => this.handleNameChange(e)}
+			/>
+		);
 	}
 
 	renderSizeInput() {
@@ -333,6 +350,7 @@ class Editor extends Component {
 		return (
 			<div>
 				<h2>Editor</h2>
+				{this.renderNameInput()}
 				<div className="in-a-row">
 					{this.renderSizeInput()}
 					{this.renderSaveButton()}
