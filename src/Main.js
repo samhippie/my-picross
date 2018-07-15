@@ -6,6 +6,7 @@ import {
 } from 'react-router-dom';
 import Browser from './Browser';
 import Editor from './Editor';
+import Game from './Game';
 
 class Main extends Component {
 	render() {
@@ -22,6 +23,7 @@ class Main extends Component {
 					<div className="content">
 						<Route exact path="/" component={Browser}/>
 						<Route exact path="/editor" component={Editor}/>
+						<Route path="/play/:id" component={Game}/>
 					</div>
 				</div>
 			</HashRouter>

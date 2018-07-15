@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Board from './Board.js';
-import './editor.css';
+import './game.css';
 
 class SizeInput extends Component {
 	constructor(props) {
@@ -118,7 +118,7 @@ class ColorPicker extends Component {
 	}
 
 	renderColorEntry(color, index) {
-		if(index == this.props.blankColor) {
+		if(index === this.props.blankColor) {
 			return null;
 		}
 		const buttonStyle = {backgroundColor: color};
@@ -159,7 +159,6 @@ class ColorPicker extends Component {
 
 	render() {
 		const colors = this.props.colors;
-		const blankColor = this.props.blankColor;
 		return (
 			<ul className="color-picker">
 				{colors/*.filter((c,i) => i !== blankColor)*/
@@ -193,6 +192,9 @@ class Editor extends Component {
 	handleBoardClick(board, i) {
 		board.updateRowCount(Math.floor(i/board.state.width));
 		board.updateColCount(i % board.state.width);
+		this.setState({
+			squares: board.getSquares(),
+		});
 	}
 
 	//changes the saved board size, but does  not update the current board
@@ -254,6 +256,26 @@ class Editor extends Component {
 		});
 	}
 
+	handleSave() {
+		//get all the important data together
+		const data = {
+			version: 1,
+			width: this.state.width,
+			height: this.state.height,
+			colors: this.state.colors,
+			blankColor: this.state.blankColor,
+			useHcpRules: this.state.useHcpRules,
+			squares: this.state.squares,
+		};
+		//spit it out to console (for now)
+		const strData = JSON.stringify(data);
+		const encData = Buffer.from(strData).toString("base64");
+		console.log("begin data dump");
+		console.log(encData);
+		console.log("end data dump");
+		alert("dumped game data to console");
+	}
+
 	renderSizeInput() {
 		return (
 			<SizeInput 
@@ -263,6 +285,17 @@ class Editor extends Component {
 				onSubmit={() => this.handleNewBoard()}
 			/>
 		);
+	}
+
+	renderSaveButton() {
+		return (
+			<button
+				className="save-button"
+				onClick={() => this.handleSave()}
+			>
+				Save
+			</button>
+		)
 	}
 
 	renderColorInput() {
@@ -294,13 +327,16 @@ class Editor extends Component {
 		);
 	}
 
+
 	render() {
 		return (
 			<div>
 				<h2>Editor</h2>
-				<p>Welcome to the editor</p>
-				{this.renderSizeInput()}
-				<div className="color-board-row">
+				<div className="in-a-row">
+					{this.renderSizeInput()}
+					{this.renderSaveButton()}
+				</div>
+				<div className="in-a-row">
 					{this.renderColorInput()}
 					{this.renderBoard()}
 				</div>

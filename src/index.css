@@ -145,7 +145,7 @@ ul.header li a {
 
 
 .square:focus {
-	outline: none;
+	outline: 0;
 }
 
 .kbd-navigation .square:focus {
@@ -159,3 +159,4 @@ ul.header li a {
 .game-info {
 	margin-left: 20px;
 }
+

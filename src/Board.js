@@ -13,6 +13,11 @@ class Square extends Component {
 		const style = {
 			'backgroundColor': this.props.color,
 		};
+		let value = null;
+		if(this.props.isCrossedOut) {
+			style.backgroundColor = 'white';
+			value = 'X';
+		}
 		if (this.props.thickOutline & Directions.LEFT) {
 			style['borderLeftWidth'] = '2px';
 		} if (this.props.thickOutline & Directions.RIGHT) {
@@ -25,21 +30,71 @@ class Square extends Component {
 		return (
 			<button 
 				className="square" 
-				onClick={this.props.onClick}
+				onMouseDown={e => this.props.onClick(e)}
+				onMouseOver={e => this.props.onClick(e)}
+				onContextMenu={e => e.preventDefault()}
 				style={style}
-			/>
+			>
+				{value}
+			</button>
 		);
 	}
 }
 
 class CountSquare extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			isHovered: false,
+		};
+	}
+
+	handleMouseOver() {
+		this.setState({
+			isHovered: true,
+		});
+	}
+
+	handleMouseLeave() {
+		this.setState({
+			isHovered: false,
+		});
+	}
+
 	renderText(colorIndex, text, key) {
-		const color = this.props.colors[colorIndex];
+		const style = {};
+		if(this.state.isHovered) {
+			style.color = 'white';
+			style.backgroundColor = this.props.colors[colorIndex];
+		} else {
+			style.color = this.props.colors[colorIndex];
+		}
+		/*
+		if(this.props.isComplete || true) {
+			style.textDecoration = 'line-through black double';
+		}
+		*/
 		return (
 			<li
 				key={key}
-				style={{'color': color }}>
+				style={style}
+				onMouseOver={() => this.handleMouseOver()}
+				onMouseLeave={() => this.handleMouseLeave()}
+			>
 				{text}
+			</li>
+		);
+	}
+
+	//render a check when a row is complete
+	renderComplete(key) {
+		if(!this.props.isComplete) {
+			return null;
+		}
+
+		return (
+			<li key={key}>
+				<i className="fas fa-check"/>
 			</li>
 		);
 	}
@@ -50,11 +105,12 @@ class CountSquare extends Component {
 								? "count-square-row"
 								: "count-square-col"}>
 				<ul>
-				{this.props.values.filter(value => {
-					return this.props.blankColor !== value.colorIndex;
-				}).map((value, index) => {
-					return this.renderText(value.colorIndex, value.count, index)
-				})}
+					{this.props.values.filter(value => {
+						return this.props.blankColor !== value.colorIndex;
+					}).map((value, index) => {
+						return this.renderText(value.colorIndex, value.count, index)
+					})}
+					{this.renderComplete(this.props.values.length)}
 				</ul>
 			</div>
 		);
@@ -68,6 +124,7 @@ class Board extends Component {
 		const height = props.height || 15;
 		const squares = props.squares || Array(width * height).fill(props.blankColor);
 		const blockSize = props.blockSize || 5;
+		const solSquares = props.solSquares;
 		this.state = {
 			width: width,
 			height: height,
@@ -75,20 +132,28 @@ class Board extends Component {
 			squares: squares,
 			rowCounts: Array(height).fill(null),
 			colCounts: Array(width).fill(null),
+			rowCompleted: Array(height).fill(false),
+			colCompleted: Array(width).fill(false),
 		}
+
+		//if there is a given solution, use that for making the row counts
+		//else, just use the blank squares
+		let countSrc = solSquares
+						? solSquares
+						: squares;
 
 		//init row counts
 		this.state.rowCounts = Array.from({length: height}, (x,r) => {
-			const row = this.state.squares.slice(r*width, (r+1) * width);
-			return getRowNumbers(this.props.colors, row);
+			const row = countSrc.slice(r*width, (r+1) * width);
+			return getRowNumbers(this.props.blankColor, row);
 		});
 
 		//init col counts
 		this.state.colCounts = Array.from({length: width}, (x,c) => {
-			const col = this.state.squares.filter((x, index) => {
+			const col = countSrc.filter((x, index) => {
 				return index % width === c;
 			});
-			return getRowNumbers(this.props.colors, col);
+			return getRowNumbers(this.props.blankColor, col);
 		});
 	}
 
@@ -96,7 +161,7 @@ class Board extends Component {
 		const width = this.state.width;
 		const row = this.state.squares.slice(r*width, (r+1) * width);
 		let rowCounts = this.state.rowCounts.slice();
-		rowCounts[r] = getRowNumbers(this.props.colors, row);
+		rowCounts[r] = getRowNumbers(this.props.blankColor, row);
 		this.setState({
 			rowCounts: rowCounts,
 		});
@@ -108,18 +173,82 @@ class Board extends Component {
 			return index % width === c;
 		});
 		let colCounts = this.state.colCounts.slice();
-		colCounts[c] = getRowNumbers(this.props.colors, col);
+		colCounts[c] = getRowNumbers(this.props.blankColor, col);
 		this.setState({
 			colCounts: colCounts,
 		});
 	}
 
-	handleClick(i) {
+	//generic check for color count equality
+	countCheck(a, b) {
+		//remove any blank or crossed-out blocks
+		const aNorm = a.filter(v => v.colorIndex !== this.props.blankColor && v.colorIndex !== -1);
+		const bNorm = b.filter(v => v.colorIndex !== this.props.blankColor && v.colorIndex !== -1);
+		if(aNorm.length !== bNorm.length) {
+			return false;
+		}
+		//simple check for pairwise equality
+		for(let i = 0; i < aNorm.length; i++) {
+			if(aNorm[i].colorIndex !== bNorm[i].colorIndex || 
+				aNorm[i].count !== bNorm[i].count) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	//updates rowCompleted if the given row is completed
+	checkRowCompleted(r) {
+		const width = this.state.width;
+		const row = this.state.squares.slice(r*width, (r+1) * width);
+		const rowCount = getRowNumbers(this.props.blankColor, row);
+		const target = this.state.rowCounts[r];
+		const same = this.countCheck(target, rowCount);
+		const rowCompleted = this.state.rowCompleted.slice();
+		rowCompleted[r] = same;
+		this.setState({
+			rowCompleted: rowCompleted,
+		});
+	}
+
+	//updates colCompleted if the given column is completed
+	checkColCompleted(c) {
+		const width = this.state.width;
+		const col = this.state.squares.filter((sq, index) => {
+			return index % width === c;
+		});
+		const colCount = getRowNumbers(this.props.blankColor, col);
+		const target = this.state.colCounts[c];
+		const same = this.countCheck(target, colCount);
+		const colCompleted = this.state.colCompleted.slice();
+		colCompleted[c] = same;
+		this.setState({
+			colCompleted: colCompleted,
+		});
+	}
+
+	getSquares() {
+		return this.state.squares;
+	}
+
+	handleClick(i, event) {
 		const squares = this.state.squares.slice();
-		if(squares[i] === this.props.currentColor) {
-			squares[i] = 0;
+		//on left click, color the square in
+		//on right click, cross it out
+		if(event.buttons & 1) {
+			if(squares[i] === this.props.currentColor) {
+				squares[i] = 0;
+			} else {
+				squares[i] = this.props.currentColor;
+			}
+		} else if(event.buttons & 2 && this.props.enableRightClick) {
+			if(squares[i] === -1) {
+				squares[i] = 0;
+			} else {
+				squares[i] = -1;
+			}
 		} else {
-			squares[i] = this.props.currentColor;
+			return;//nothing to do
 		}
 		this.setState({
 			squares: squares,
@@ -154,8 +283,9 @@ class Board extends Component {
 			<Square 
 				key={i}
 				color={this.props.colors[this.state.squares[i]]}
-				onClick={() => this.handleClick(i)}
+				onClick={(e) => this.handleClick(i,e)}
 				thickOutline={outline}
+				isCrossedOut={this.state.squares[i] === -1}
 			/>
 		);
 	}
@@ -171,16 +301,20 @@ class Board extends Component {
 	}
 
 	renderCountSquare(isRow, i) {
+		const value = isRow
+						? this.state.rowCounts[i]
+						: this.state.colCounts[i];
+		const isComplete = isRow
+							? this.state.rowCompleted[i]
+							: this.state.colCompleted[i];
 		return (
 			<CountSquare 
 				key={(isRow? 1 : -1) * i}
 				isRow={isRow}
 				blankColor={this.props.blankColor}
 				colors={this.props.colors}
-				values={isRow 
-					? this.state.rowCounts[i] 
-					: this.state.colCounts[i]
-				}
+				values={value}
+				isComplete={isComplete}
 			/>
 		);
 	}
@@ -209,7 +343,7 @@ class Board extends Component {
 
 //returns a list of pairs, (color index, # of blocks)
 //does this for all colors, including white
-function getRowNumbers(colorMap, row) {
+function getRowNumbers(blankColor, row) {
 	let nums = [];
 	let cur = null;
 	let curCount = 0;
@@ -217,7 +351,7 @@ function getRowNumbers(colorMap, row) {
 		if (c === cur) {
 			curCount += 1;
 		} else {
-			if (cur !== null) {
+			if (cur !== null && cur !== blankColor) {
 				nums.push({
 					colorIndex: cur, 
 					count: curCount,
@@ -228,10 +362,12 @@ function getRowNumbers(colorMap, row) {
 		}
 	});
 	//still have to add the last string
-	nums.push({
-		colorIndex: cur,
-		count: curCount,
-	});
+	if(cur !== null && cur !== blankColor) {
+		nums.push({
+			colorIndex: cur,
+			count: curCount,
+		});
+	}
 	return nums
 }
 
