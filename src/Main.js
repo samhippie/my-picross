@@ -13,8 +13,7 @@ class Main extends Component {
 		return (
 			<HashRouter>
 				<div>
-					<h1>Howdy, this is the main page</h1>
-					<p>Here is some content</p>
+					<h1>Picross</h1>
 					<ul className="header">
 						<li>
 							<NavLink 
@@ -22,7 +21,7 @@ class Main extends Component {
 								to="/" 
 								activeClassName="active-link"
 							>
-									Home
+									Browse
 							</NavLink>
 						</li>
 						<li>
@@ -31,7 +30,7 @@ class Main extends Component {
 								to="/editor"
 								activeClassName="active-link"
 							>
-								Open Editor
+								Create New
 							</NavLink>
 						</li>
 					</ul>

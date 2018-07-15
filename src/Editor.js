@@ -260,6 +260,7 @@ class Editor extends Component {
 		//get all the important data together
 		const data = {
 			version: 1,
+			name: "TODO add name input",
 			width: this.state.width,
 			height: this.state.height,
 			colors: this.state.colors,

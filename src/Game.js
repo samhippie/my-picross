@@ -78,6 +78,7 @@ class Game extends Component {
 		//stores what the user has done, not the solution
 		const squares = Array(gameData.width * gameData.height).fill(gameData.blankColor);
 		this.state = {
+			name: gameData.name,
 			width: gameData.width,
 			height: gameData.height,
 			colors: gameData.colors,
@@ -158,7 +159,7 @@ class Game extends Component {
 		return (
 			<EndModal
 				show={this.state.showEndModal}
-				name={"<insert name here>"}
+				name={this.state.name}
 				onClose={() => this.handleEndClose()}
 				onHome={() => this.handleEndHome()}
 			/>
@@ -172,7 +173,7 @@ class Game extends Component {
 		}
 		return (
 			<div>
-				<h2>Game {this.props.match.params.id}</h2>
+				<h2>"{this.state.name}"</h2>
 				<div className="in-a-row">
 					{this.renderColorInput()}
 					{this.renderBoard()}
