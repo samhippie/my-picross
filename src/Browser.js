@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 
 class Browser extends Component {
 	render() {
 		return (
 			<div>
-				<h2>This is the browser</h2>
-				<p>how's this for some content to browse?</p>
+				<Link to="/play/123">Play Test Game</Link>
 			</div>
 		);
 	}

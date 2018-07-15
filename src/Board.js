@@ -18,14 +18,21 @@ class Square extends Component {
 			style.backgroundColor = 'white';
 			value = 'X';
 		}
-		if (this.props.thickOutline & Directions.LEFT) {
-			style['borderLeftWidth'] = '2px';
-		} if (this.props.thickOutline & Directions.RIGHT) {
-			style['borderRightWidth'] = '2px';
-		} if (this.props.thickOutline & Directions.TOP) {
-			style['borderTopWidth'] = '2px';
-		} if (this.props.thickOutline & Directions.BOTTOM) {
-			style['borderBottomWidth'] = '2px';
+		//just show the color if it's finished
+		if(this.props.isFinished) {
+			value = null;
+			style.outline = '0';
+			style.border = '0';
+		} else {
+			if (this.props.thickOutline & Directions.LEFT) {
+				style['borderLeftWidth'] = '2px';
+			} if (this.props.thickOutline & Directions.RIGHT) {
+				style['borderRightWidth'] = '2px';
+			} if (this.props.thickOutline & Directions.TOP) {
+				style['borderTopWidth'] = '2px';
+			} if (this.props.thickOutline & Directions.BOTTOM) {
+				style['borderBottomWidth'] = '2px';
+			}
 		}
 		return (
 			<button 
@@ -134,6 +141,7 @@ class Board extends Component {
 			colCounts: Array(width).fill(null),
 			rowCompleted: Array(height).fill(false),
 			colCompleted: Array(width).fill(false),
+			isFinished: false,
 		}
 
 		//if there is a given solution, use that for making the row counts
@@ -197,6 +205,20 @@ class Board extends Component {
 		return true;
 	}
 
+	//checks if game is finished, calls callback if it exists
+	checkFinished() {
+		if(this.state.rowCompleted.reduce((acc, val) => acc && val, true) &&
+		   this.state.colCompleted.reduce((acc, val) => acc && val, true)) {
+			this.setState({
+				isFinished: true,
+			}, () => {
+				if(this.props.onFinish) {
+					this.props.onFinish(this);
+				}
+			});
+	   }
+	}
+
 	//updates rowCompleted if the given row is completed
 	checkRowCompleted(r) {
 		const width = this.state.width;
@@ -208,7 +230,7 @@ class Board extends Component {
 		rowCompleted[r] = same;
 		this.setState({
 			rowCompleted: rowCompleted,
-		});
+		}, () => {this.checkFinished()});
 	}
 
 	//updates colCompleted if the given column is completed
@@ -224,14 +246,18 @@ class Board extends Component {
 		colCompleted[c] = same;
 		this.setState({
 			colCompleted: colCompleted,
-		});
+		}, () => {this.checkFinished()});
 	}
-
+	
 	getSquares() {
 		return this.state.squares;
 	}
 
 	handleClick(i, event) {
+		//don't let the user do anything if they've finished the puzzle
+		if(this.state.isFinished) {
+			return;
+		}
 		const squares = this.state.squares.slice();
 		//on left click, color the square in
 		//on right click, cross it out
@@ -286,6 +312,7 @@ class Board extends Component {
 				onClick={(e) => this.handleClick(i,e)}
 				thickOutline={outline}
 				isCrossedOut={this.state.squares[i] === -1}
+				isFinished={this.state.isFinished}
 			/>
 		);
 	}

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Redirect } from 'react-router';
 import Board from './Board.js';
 import './game.css'
 
@@ -35,6 +36,38 @@ class ColorPicker extends Component {
 	}
 }
 
+class EndModal extends Component {
+	handleClose() {
+		this.props.onClose();
+	}
+
+	handleHome() {
+		this.props.onHome();
+	}
+
+	render() {
+		if(!this.props.show) {
+			return null;
+		}
+
+		return (
+			<div className="modal-backdrop">
+				<div className="modal">
+					<p>You have completed puzzle {this.props.name}</p>
+					<div className="modal-footer">
+						<button onClick={() => this.handleClose()}>
+							Close
+						</button>
+						<button onClick={() => this.handleHome()}>
+							Home
+						</button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+}
+
 class Game extends Component {
 	constructor(props) {
 		super(props);
@@ -53,6 +86,8 @@ class Game extends Component {
 			useHcpRules: gameData.useHcpRules,
 			solSquares: gameData.squares,
 			squares: squares,
+			isFinished: false,
+			showEndModal: false,
 		};
 	}
 
@@ -67,6 +102,27 @@ class Game extends Component {
 		const col = i % this.state.width;
 		board.checkRowCompleted(row)
 		board.checkColCompleted(col)
+	}
+
+	handleFinish(board) {
+		console.log("finished!");
+		this.setState({
+			isFinished: true,
+			showEndModal: true,
+		});
+	}
+
+	handleEndClose() {
+		this.setState({
+			showEndModal: false,
+		});
+	}
+
+	handleEndHome() {
+		this.setState({
+			showEndModal: false,
+			goHome: true,
+		});
 	}
 
 	renderColorInput() {
@@ -93,11 +149,27 @@ class Game extends Component {
 				solSquares={this.state.solSquares}
 				enableRightClick={true}
 				onClick={(b,i) => this.checkCounts(b,i)}
+				onFinish={b => this.handleFinish(b)}
 			/>
 		);
 	}
 
+	renderEndModal() {
+		return (
+			<EndModal
+				show={this.state.showEndModal}
+				name={"<insert name here>"}
+				onClose={() => this.handleEndClose()}
+				onHome={() => this.handleEndHome()}
+			/>
+
+		);
+	}
+
 	render() {
+		if(this.state.goHome) {
+			return <Redirect to="/"/>
+		}
 		return (
 			<div>
 				<h2>Game {this.props.match.params.id}</h2>
@@ -105,6 +177,7 @@ class Game extends Component {
 					{this.renderColorInput()}
 					{this.renderBoard()}
 				</div>
+				{this.renderEndModal()}
 			</div>
 		);
 	}

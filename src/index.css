@@ -8,6 +8,10 @@ h1, h2, p, ul, li, label {
 	font-family: sans-serif;
 }
 
+.active-link {
+	background-color: #CCCCCC;
+}
+
 ul.header li {
 	display: inline;
 	list-style-type: none;

@@ -16,8 +16,24 @@ class Main extends Component {
 					<h1>Howdy, this is the main page</h1>
 					<p>Here is some content</p>
 					<ul className="header">
-						<li><NavLink to="/">Home</NavLink></li>
-						<li><NavLink to="/editor">Open Editor</NavLink></li>
+						<li>
+							<NavLink 
+								exact
+								to="/" 
+								activeClassName="active-link"
+							>
+									Home
+							</NavLink>
+						</li>
+						<li>
+							<NavLink 
+								exact
+								to="/editor"
+								activeClassName="active-link"
+							>
+								Open Editor
+							</NavLink>
+						</li>
 					</ul>
 
 					<div className="content">

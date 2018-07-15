@@ -25,7 +25,7 @@ ul.color-picker {
 	list-style: none;
 }
 
-.color-modal-backdrop {
+.modal-backdrop {
 	position: fixed;
 	top: 0;
 	bottom: 0;
@@ -35,16 +35,18 @@ ul.color-picker {
 	padding: 50px;
 }
 
-.color-modal {
+.modal {
 	background-color: #FFFFFF;
 	border-radius: 5px;
 	margin: 30px auto;
 	padding: 30px;
 	max-width: 500px;
+	overflow: auto;
+	white-space: normal;
 }
 
-.color-modal p {
-	margin: 30 auto;
+.modal p {
+	margin: 16px auto;
 }
 
 .color-button {

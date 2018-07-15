@@ -77,8 +77,8 @@ class ColorModal extends Component {
 		}
 
 		return (
-			<div className="color-modal-backdrop">
-				<div className="color-modal">
+			<div className="modal-backdrop">
+				<div className="modal">
 					<p>Current color is {this.props.color}</p>
 					<label htmlFor="colorText">New Color (any CSS-valid format) </label>
 					<input type="text" id="colorText"
