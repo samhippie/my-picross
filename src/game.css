@@ -78,3 +78,7 @@ ul.color-picker {
 	padding: 4px;
 	margin: 4px;
 }
+
+.error-text {
+	color: red;
+}

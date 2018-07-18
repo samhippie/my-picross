@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Board from './Board.js';
 import './game.css';
+import * as Imager from './Imager';
 
 class SizeInput extends Component {
 	constructor(props) {
@@ -169,6 +170,144 @@ class ColorPicker extends Component {
 	}
 }
 
+class ImportModal extends Component {
+	constructor(props) {
+		super(props);
+		const builder = new Imager.Builder()
+				.setOnError(s => this.handleError(s))
+				.setOnSuccess(d => this.handleSuccess(d));
+		this.state = {
+			builder: builder,
+			isError: false,
+			errorText: "No errors",
+			isLoading: false,
+		};
+	}
+
+	handleFileInput(event) {
+		this.setState({
+			builder: this.state.builder.setFile(event.target.files[0]),
+		});
+	}
+
+	handleSizeInput(event) {
+		this.setState({
+			builder: this.state.builder.setSize(event.target.value),
+		});
+	}
+
+	handleNumColorsInput(event) {
+		this.setState({
+			builder: this.state.builder.setNumColors(event.target.value),
+		});
+	}
+
+	handleSubmit() {
+		this.setState({
+			isLoading: true,
+			isError: false,
+		});
+		this.state.builder.build();
+	}
+
+	handleError(msg) {
+		this.setState({
+			isError: true,
+			errorText: msg,
+			isLoading: false,
+		});
+	}
+
+	handleSuccess(data) {
+		this.setState({
+			isLoading: false,
+		});
+		//TODO
+		console.log("finished!");
+		console.log(data);
+	}
+
+	renderLoading() {
+		if(!this.state.isLoading) {
+			return null;
+		}
+
+		return (
+			<i className="fas fa-spinner fa-spin"/>
+		);
+	}
+
+	renderErrorText() {
+		if(!this.state.isError) {
+			return null
+		}
+
+		return (
+			<div className='error-text'>
+				{this.state.errorText}
+			</div>
+		);
+	}
+
+	renderInputForm() {
+		const style = {width: '5em'}
+		return (
+			<form>
+				<label htmlFor="size-input">Size </label>
+				<input
+					id="size-input" type="number"
+					min="1" max="100" step="1"
+					style={style}
+					value={this.state.builder.size}
+					onChange={e => this.handleSizeInput(e)}
+				/>
+				<br/>
+				<label htmlFor="numColors-input">Number of colors </label>
+				<input
+					id="numColors-input" type="number"
+					min="1" max="20" step="1"
+					style={style}
+					value={this.state.builder.numColors}
+					onChange={e => this.handleNumColorsInput(e)}
+				/>
+				<br/>
+				<label htmlFor="file-input">Image </label>
+				<input 
+					id="file-input" type="file"
+					onChange={e => this.handleFileInput(e)}
+				/>
+				<br/>
+
+				{this.renderLoading()}
+				{this.renderErrorText()}
+			</form>
+		);
+	}
+
+	render() {
+		if(!this.props.show) {
+			return null;
+		}
+
+		return (
+			<div className="modal-backdrop">
+				<div className="modal">
+					{this.renderInputForm()}
+					<div className="modal-footer">
+						<br/>
+						<button onClick={() => this.props.onClose()}>
+							Close
+						</button>
+						<button onClick={() => this.handleSubmit()}>
+							Submit
+						</button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+}
+
 class Editor extends Component {
 	constructor(props) {
 		super(props);
@@ -185,6 +324,7 @@ class Editor extends Component {
 			isColorModalOpen: false,
 			colorModalColor: null,
 			name: "Untitled",
+			isImportModalOpen: false,
 		}
 	}
 
@@ -284,6 +424,18 @@ class Editor extends Component {
 		alert("dumped game data to console");
 	}
 
+	handleShowImport() {
+		this.setState({
+			isImportModalOpen: true,
+		});
+	}
+
+	handleCloseImport() {
+		this.setState({
+			isImportModalOpen: false,
+		});
+	}
+
 	renderNameInput() {
 		return (
 			<input 
@@ -302,6 +454,17 @@ class Editor extends Component {
 				onChange={(w,h) => this.handleSizeChange(w,h)}
 				onSubmit={() => this.handleNewBoard()}
 			/>
+		);
+	}
+
+	renderImportButton() {
+		return (
+			<button
+				className="save-button"
+				onClick={() => this.handleShowImport()}
+			>
+				Import From Image
+			</button>
 		);
 	}
 
@@ -330,6 +493,25 @@ class Editor extends Component {
 		);
 	}
 
+	renderColorModal() {
+		return (
+			<ColorModal
+				show={this.state.isColorModalOpen}
+				color={this.state.colorModalColor}
+				onClose={(c) => this.closeColorModal(c)}
+			/>
+		);
+	}
+
+	renderImportModal() {
+		return (
+			<ImportModal
+				show={this.state.isImportModalOpen}
+				onClose={() => this.handleCloseImport()}
+			/>
+		);
+	}
+
 	renderBoard() {
 		return(
 			<Board
@@ -353,17 +535,15 @@ class Editor extends Component {
 				{this.renderNameInput()}
 				<div className="in-a-row">
 					{this.renderSizeInput()}
+					{this.renderImportButton()}
 					{this.renderSaveButton()}
 				</div>
 				<div className="in-a-row">
 					{this.renderColorInput()}
 					{this.renderBoard()}
 				</div>
-				<ColorModal
-					show={this.state.isColorModalOpen}
-					color={this.state.colorModalColor}
-					onClose={(c) => this.closeColorModal(c)}
-				/>
+				{this.renderColorModal()}
+				{this.renderImportModal()}
 			</div>
 		);
 	}
