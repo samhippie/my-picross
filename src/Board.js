@@ -163,6 +163,7 @@ class Board extends Component {
 			});
 			return getRowNumbers(this.props.blankColor, col);
 		});
+		console.log("init board", this.state.squares);
 	}
 
 	updateRowCount(r) {

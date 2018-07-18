@@ -222,9 +222,9 @@ class ImportModal extends Component {
 		this.setState({
 			isLoading: false,
 		});
-		//TODO
 		console.log("finished!");
 		console.log(data);
+		this.props.onImport(data);
 	}
 
 	renderLoading() {
@@ -314,6 +314,7 @@ class Editor extends Component {
 		this.state = {
 			width: 15,
 			height: 15,
+			squares: null,
 			colors: ['white', 'black', 'blue'],
 			currentColor: 1,
 			blankColor: 0,
@@ -436,6 +437,19 @@ class Editor extends Component {
 		});
 	}
 
+	handleImport(data) {
+		this.setState({
+			width: data.width,
+			height: data.height,
+			colors: data.colors,
+			blankColor: 0,
+			currentColor: 1,
+			squares: data.squares,
+			boardKey: this.state.boardKey + 1,
+			isImportModalOpen: false,
+		});
+	}
+
 	renderNameInput() {
 		return (
 			<input 
@@ -508,6 +522,7 @@ class Editor extends Component {
 			<ImportModal
 				show={this.state.isImportModalOpen}
 				onClose={() => this.handleCloseImport()}
+				onImport={d => this.handleImport(d)}
 			/>
 		);
 	}
@@ -518,6 +533,7 @@ class Editor extends Component {
 				key={this.state.boardKey}
 				width={this.state.width}
 				height={this.state.height}
+				squares={this.state.squares}
 				colors={this.state.colors}
 				blankColor={0}
 				currentColor={this.state.currentColor}
