@@ -68,7 +68,7 @@ class CountSquare extends Component {
 		});
 	}
 
-	renderText(colorIndex, text, key) {
+	renderText(colorIndex, text, key, isSpecial) {
 		const style = {};
 		if(this.state.isHovered) {
 			style.color = 'white';
@@ -76,11 +76,12 @@ class CountSquare extends Component {
 		} else {
 			style.color = this.props.colors[colorIndex];
 		}
-		/*
-		if(this.props.isComplete || true) {
-			style.textDecoration = 'line-through black double';
+		if(isSpecial) {
+			style.fontStyle = 'oblique';
+			text = text + "*"
+		} else {
+			style.fontWeight = 'bold';
 		}
-		*/
 		return (
 			<li
 				key={key}
@@ -115,7 +116,7 @@ class CountSquare extends Component {
 					{this.props.values.filter(value => {
 						return this.props.blankColor !== value.colorIndex;
 					}).map((value, index) => {
-						return this.renderText(value.colorIndex, value.count, index)
+						return this.renderText(value.colorIndex, Math.abs(value.count), index, value.count < 0)
 					})}
 					{this.renderComplete(this.props.values.length)}
 				</ul>
@@ -153,7 +154,11 @@ class Board extends Component {
 		//init row counts
 		this.state.rowCounts = Array.from({length: height}, (x,r) => {
 			const row = countSrc.slice(r*width, (r+1) * width);
-			return getRowNumbers(this.props.blankColor, row);
+			return getRowNumbers(this.props.blankColor, row, false);
+		});
+		this.state.hcpRowCounts = Array.from({length: height}, (x,r) => {
+			const row = countSrc.slice(r*width, (r+1) * width);
+			return getRowNumbers(this.props.blankColor, row, true);
 		});
 
 		//init col counts
@@ -161,18 +166,33 @@ class Board extends Component {
 			const col = countSrc.filter((x, index) => {
 				return index % width === c;
 			});
-			return getRowNumbers(this.props.blankColor, col);
+			return getRowNumbers(this.props.blankColor, col, 
+				false);
 		});
+		this.state.hcpColCounts = Array.from({length: width}, (x,c) => {
+			const col = countSrc.filter((x, index) => {
+				return index % width === c;
+			});
+			return getRowNumbers(this.props.blankColor, col, 
+				true);
+		});
+
 	}
 
 	updateRowCount(r) {
 		const width = this.state.width;
 		const row = this.state.squares.slice(r*width, (r+1) * width);
 		let rowCounts = this.state.rowCounts.slice();
-		rowCounts[r] = getRowNumbers(this.props.blankColor, row);
+		rowCounts[r] = getRowNumbers(this.props.blankColor, row, false);
 		this.setState({
 			rowCounts: rowCounts,
 		});
+		let hcpRowCounts = this.state.hcpRowCounts.slice();
+		hcpRowCounts[r] = getRowNumbers(this.props.blankColor, row, true);
+		this.setState({
+			hcpRowCounts: hcpRowCounts,
+		});
+
 	}
 	
 	updateColCount(c) {
@@ -181,9 +201,15 @@ class Board extends Component {
 			return index % width === c;
 		});
 		let colCounts = this.state.colCounts.slice();
-		colCounts[c] = getRowNumbers(this.props.blankColor, col);
+		colCounts[c] = getRowNumbers(this.props.blankColor, col, false);
 		this.setState({
 			colCounts: colCounts,
+		});
+
+		let hcpColCounts = this.state.hcpColCounts.slice();
+		hcpColCounts[c] = getRowNumbers(this.props.blankColor, col, true);
+		this.setState({
+			hcpColCounts: hcpColCounts,
 		});
 	}
 
@@ -223,8 +249,11 @@ class Board extends Component {
 	checkRowCompleted(r) {
 		const width = this.state.width;
 		const row = this.state.squares.slice(r*width, (r+1) * width);
-		const rowCount = getRowNumbers(this.props.blankColor, row);
-		const target = this.state.rowCounts[r];
+		const rowCount = getRowNumbers(this.props.blankColor, row, 
+			this.props.useHcpRules);
+		const target = this.props.useHcpRules 
+							? this.state.hcpRowCounts[r]
+							: this.state.rowCounts[r];
 		const same = this.countCheck(target, rowCount);
 		const rowCompleted = this.state.rowCompleted.slice();
 		rowCompleted[r] = same;
@@ -239,8 +268,11 @@ class Board extends Component {
 		const col = this.state.squares.filter((sq, index) => {
 			return index % width === c;
 		});
-		const colCount = getRowNumbers(this.props.blankColor, col);
-		const target = this.state.colCounts[c];
+		const colCount = getRowNumbers(this.props.blankColor, col, 
+			this.props.useHcpRules);
+		const target = this.props.useHcpRules 
+							? this.state.hcpColCounts[c]
+							: this.state.colCounts[c];
 		const same = this.countCheck(target, colCount);
 		const colCompleted = this.state.colCompleted.slice();
 		colCompleted[c] = same;
@@ -329,8 +361,12 @@ class Board extends Component {
 
 	renderCountSquare(isRow, i) {
 		const value = isRow
-						? this.state.rowCounts[i]
-						: this.state.colCounts[i];
+						? (this.props.useHcpRules 
+							? this.state.hcpRowCounts[i]
+							: this.state.rowCounts[i])
+						: (this.props.useHcpRules
+							? this.state.hcpColCounts[i]
+							: this.state.colCounts[i]);
 		const isComplete = isRow
 							? this.state.rowCompleted[i]
 							: this.state.colCompleted[i];
@@ -370,32 +406,82 @@ class Board extends Component {
 
 //returns a list of pairs, (color index, # of blocks)
 //does this for all colors, including white
-function getRowNumbers(blankColor, row) {
-	let nums = [];
-	let cur = null;
-	let curCount = 0;
-	row.forEach(c => {
-		if (c === cur) {
-			curCount += 1;
-		} else {
-			if (cur !== null && cur !== blankColor) {
+function getRowNumbers(blankColor, row, useHcpRules) {
+	if(!useHcpRules) {
+		//count the number of clusters of pixels of the same color
+		let nums = [];
+		let cur = null;
+		let curCount = 0;
+		row.forEach(c => {
+			if (c === cur) {
+				curCount += 1;
+			} else {
+				if (cur !== null && cur !== blankColor) {
+					nums.push({
+						colorIndex: cur, 
+						count: curCount,
+					});
+				}
+				cur = c;
+				curCount = 1;
+			}
+		});
+		//still have to add the last string
+		if(cur !== null && cur !== blankColor) {
+			nums.push({
+				colorIndex: cur,
+				count: curCount,
+			});
+		}
+		return nums
+	} else {
+		//count the number of each color
+		//if the colors are all in a row, then make the count negative
+		//(hacky, but I don't care)
+		
+		//simply count up all of each color
+		//negative because we assume each color is in a single cluster
+		const counts = {};
+		const isCluster = {};
+		row.forEach(color => {
+			if(!counts[color]) {
+				counts[color] = 1;
+				isCluster[color] = true;
+			} else {
+				counts[color]++;
+			}
+		});
+		//now if a cluster of a color is shorter than what's in count, it's
+		//not a single cluster and should not be negative
+		let cur = null;
+		let curCount = 0;
+		row.forEach(c => {
+			if (c === cur) {
+				curCount += 1;
+			} else {
+				if (cur !== null && counts[cur] > curCount) {
+					isCluster[cur] = false;
+				}
+				cur = c;
+				curCount = 1;
+			}
+		});
+		if(cur !== null && counts[cur] > curCount) {
+			isCluster[cur] = false;
+		}
+		//use counts to make a value list
+		const colors = Object.keys(counts).sort();
+		const nums = [];
+		colors.forEach(color => {
+			if(counts[color] !== 0) {
 				nums.push({
-					colorIndex: cur, 
-					count: curCount,
+					colorIndex: color,
+					count: counts[color] * (isCluster[color] ? -1 : 1),
 				});
 			}
-			cur = c;
-			curCount = 1;
-		}
-	});
-	//still have to add the last string
-	if(cur !== null && cur !== blankColor) {
-		nums.push({
-			colorIndex: cur,
-			count: curCount,
 		});
+		return nums;
 	}
-	return nums
 }
 
 export default Board;

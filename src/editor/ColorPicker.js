@@ -18,7 +18,7 @@ class ColorPicker extends Component {
 	}
 
 	renderColorEntry(color, index) {
-		if(index === this.props.blankColor) {
+		if(!this.props.useHcpRules && index === this.props.blankColor) {
 			return null;
 		}
 		const buttonStyle = {backgroundColor: color};

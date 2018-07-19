@@ -113,8 +113,8 @@ ul.header li a {
 	background: #DDDDDD;
 	border: 1px solid #000000;
 	float: left;
-	font-size: 12px;
-	font-weight: bold;
+	font-size: 18px;
+	font-weight: normal;
 	margin-right: -1px;
 	margin-top: -1px;
 	padding: 0;
@@ -133,8 +133,8 @@ ul.header li a {
 .count-square-row {
 	background: #DDDDDD;
 	border: 1px solid #000000;
-	font-size: 12px;
-	font-weight: bold;
+	font-size: 18px;
+	font-weight: normal;
 	line-height: 34px;
 	height: 34px;
 	min-width: 34px;

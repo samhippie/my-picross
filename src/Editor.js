@@ -74,6 +74,7 @@ class Editor extends Component {
 		});
 	}
 
+	//removes the color from the puzzle
 	handleColorRemove(i) {
 		const colors = this.state.colors.slice();
 		colors.splice(i, 1);
@@ -148,6 +149,12 @@ class Editor extends Component {
 		});
 	}
 
+	handleSetHcp(event) {
+		this.setState({
+			useHcpRules: event.target.checked,
+		});
+	}
+
 	renderNameInput() {
 		return (
 			<input 
@@ -197,6 +204,7 @@ class Editor extends Component {
 				colors={this.state.colors}
 				currentColor={this.state.currentColor}
 				blankColor={this.state.blankColor}
+				useHcpRules={this.state.useHcpRules}
 				onSelect={(i) => this.handleColorSelect(i)}
 				onColorEdit={(i) => this.handleColorEdit(i)}
 				onColorRemove={(i) => this.handleColorRemove(i)}
@@ -222,6 +230,20 @@ class Editor extends Component {
 				onClose={() => this.handleCloseImport()}
 				onImport={d => this.handleImport(d)}
 			/>
+		);
+	}
+
+	renderHcpToggle() {
+		return (
+			<form>
+				<label htmlFor="hcp-check">Use HCP rules </label>
+				<input 
+					id="hcp-check"
+					type="checkbox"
+					checked={this.state.useHcpRules}
+					onChange={(e) => this.handleSetHcp(e)}
+				/>
+			</form>
 		);
 	}
 
@@ -253,7 +275,10 @@ class Editor extends Component {
 					{this.renderSaveButton()}
 				</div>
 				<div className="in-a-row">
-					{this.renderColorInput()}
+					<div>
+						{this.renderHcpToggle()}
+						{this.renderColorInput()}
+					</div>
 					{this.renderBoard()}
 				</div>
 				{this.renderColorModal()}
