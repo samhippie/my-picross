@@ -2,36 +2,57 @@ onmessage = (msg) => {
 	const img = msg.data.imgData;
 
 	//generate a palette as a map from the image's pixels to a new color
-	const palette = genPalette(img, msg.data.numColors+1, false);
+	const colors = genPalette(img, msg.data.numColors+1, false);
 	//use the palette to generate a puzzle
-	const outData = genPuzzle(img, msg.data.size, palette);
+	const outData = genPuzzle(img, msg.data.size, colors);
 
 	self.postMessage({
 		isError: false,
 		data: outData,
 	})
+}
 
-	self.postMessage({
-		isError: true,
-		errorText: "Example Error",
-	});
+
+//converts r,g,b values to a 24-bit int
+function rgbToInt(r,g,b) {
+	return ((r & 0xFF) << 16) |
+		   ((g & 0xFF) << 8) |
+		   (b & 0xFF);
+}
+
+//converts a 24-bit color int to a hex string
+function intToHexString(rgb) {
+	//kinda wish javascript had printf string formatting
+	let hex = rgb.toString(16);
+	while(hex.length < 6) {
+		hex = '0' + hex;
+	}
+	return '#' + hex
+}
+
+//finds the R,G,B-space euclidean distance between 24-bit color ints
+function dist(a,b) {
+	const red = (x) => (x >> 16) & 0xFF;
+	const green = (x) => (x >> 8) & 0xFF;
+	const blue = (x) => x & 0xFF;
+	return Math.sqrt(
+		(red(a)-red(b))**2 + 
+		(green(a)-green(b))**2 +
+		(blue(a)-blue(b))**2);
 }
 
 //generates a puzzle in a same(ish) format as what Board uses
 //returns the outData object defined at the top
-function genPuzzle(img, size, palette) {
+//function genPuzzle(img, size, palette) {
+function genPuzzle(img, size, colors) {
 	outData = {
 		colors: [],
 		width: 0,
 		height: 0,
 		squares: [],
 	};
-	//make the color list in CSS format
-	outData.colors = palette.centroids.map(centroid => {
-		return "rgb(" + Math.floor(centroid[0]) + "," +
-						Math.floor(centroid[1]) + "," +
-						Math.floor(centroid[2]) + ")";
-	});
+	//make the color list in hex format
+	outData.colors = colors.map(intToHexString);
 	//figure out the size of the puzzle
 	const scaleFactor = Math.min(size / img.width,
 								 size / img.height);
@@ -39,15 +60,28 @@ function genPuzzle(img, size, palette) {
 	outData.height = Math.floor(scaleFactor * img.height);
 	outData.squares = Array({length: outData.width * outData.height}, () => 0);
 	//reduce the colors of the image
+	//find the nearest color to the given pixel
+	function nearestColor(pixel) {
+		let bestIndex = 0;
+		let bestDist = dist(colors[0], pixel);
+		colors.forEach((color,index) => {
+			const d = dist(color, pixel);
+			if(d < bestDist) {
+				bestIndex = index;
+				bestDist = d;
+			}
+		});
+		return bestIndex;
+	}
 	//putting the palette color indices in pixels
 	const pixels = [];
 	for(let i = 0; i < img.data.length / 4; i++) {
-		const pixel = [
+		const pixel = rgbToInt(
 			img.data[4*i],   //red
 			img.data[4*i+1], //green
 			img.data[4*i+2], //blue
-		];
-		pixels.push(palette.paletteMap[pixel.toString()]);
+		);
+		pixels.push(nearestColor(pixel));
 	}
 	//get the color of each square by sampling the original image
 	//init sampleCount so we can count the number of colors in each square
@@ -89,156 +123,181 @@ function genPuzzle(img, size, palette) {
 	return outData;
 }
 
-//generate a palette map using k-means clustering
-//specifically uses Lloyd's algorithm
+//generate a palette map using an octree
+//picks the highest level that has # nodes with non-zero size > num
+//then picks 1 representative from each of the num best nodes
+//if not useHcpRules, adds white
+//also merges colors that are too similar
 function genPalette(img, num, useHcpRules) {
-	//our distance function
-	function dist(a, b) {
-		return Math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2);
-	}
-
-	//finds the centroids of each cluster
-	function genCentroids(clusterMap, data) {
-		//find the average R,G, and B of each cluster
-		let clusterCounts = Array.from({length: num}, () => 1);
-		//fill([0,0,0]) just copies the same reference, so we can't use it
-		let clusterSums = Array.from({length: num}, () => [1,1,1]);
-		//add up R, G, and B values in each cluster
-		for(let i = 0; i < data.length; i++) {
-			const pixel = data[i];
-			let cluster = clusterMap[pixel.toString()];
-			clusterCounts[cluster]++;
-			let sum = clusterSums[cluster];
-			sum[0] += pixel[0];
-			sum[1] += pixel[1];
-			sum[2] += pixel[2];
+	//initializes a blank octree of the given depth
+	function createOctree(n) {
+		if(n === 0) {
+			return {
+				isLeaf: true,
+				colorCounts: {},
+				size: 0,
+			};
+		} else {
+			return {
+				isLeaf: false,
+				size: 0,
+				children: Array.from({length: 8}, () => createOctree(n-1)),
+			};
 		}
-		//find the average RGB for each cluster
-		centroids = Array(num);
-		for(let i = 0; i < num; i++) {
-			const sum = clusterSums[i];
-			const count = clusterCounts[i];
-			const rAvg = sum[0] / count;
-			const gAvg = sum[1] / count;
-			const bAvg = sum[2] / count;
-			centroids[i] = [rAvg, gAvg, bAvg];
-		}
-		return centroids;
-	}
-
-	//puts the data in clusters according to the given centroids
-	function genClusters(centroids, data) {
-		clusterMap = {};
-		for(let i = 0; i < data.length; i++) {
-			const pixel = data[i];
-			//we already mapped this color, don't do anything else
-			if(clusterMap[pixel.toString()] !== undefined) {
-				continue;
-			}
-			//find the best cluster for the pixel by min distance to centroid
-			let bestCentroid = 0;
-			let bestDist = dist(centroids[0], pixel);
-			for(let j = 1; j < num; j++) {
-				const d = dist(centroids[j], pixel);
-				if(d < bestDist) {
-					bestCentroid = j;
-				}
-			}
-			clusterMap[pixel.toString()] = bestCentroid;
-		}
-		return clusterMap;
-	}
-
-	//pack the pixels into triples
-	const pixels = [];
-	for(let i = 0; i < img.data.length / 4; i++) {
-		const packed = [
-			img.data[4*i],
-			img.data[4*i+1],
-			img.data[4*i+2],
-		];
-		pixels.push(packed);
-	}
-
-	let centroids = Array(num);
-	//this is kinda sorta like an octree
-	//first colors set the MSBs in RGB, and the LSBs later on
-	//trust me, it works
-	const bits = Math.ceil(Math.log2(num))
-	for(let i = 0; i < num; i++) {
-		let red = 0;
-		let blue = 0;
-		let green = 0;
-		for(let b = 0; b < bits; b++) {
-			red |= (i & 1) << (7-b);
-			blue |= ((i >> 1) & 1) << (7-b);
-			green |= ((i >> 2) & 1) << (7-b);
-		}
-		//& 0xFF is unnecessary, but it ensures the colors are valid
-		centroids[i] = [red & 0xFF ,blue & 0xFF, green & 0xFF]
-	}
-	//force first centroid to be white
-	if(!useHcpRules) {
-		centroids[0] = [0xFF, 0xFF, 0xFF];
-	}
-
-	//used to check convergence
-	let oldCentroids = [];
-
-	//we loop until convergence or i > 100
-	let paletteMap = {};
-	let i = 0;
-	while(true) {
-		oldCentroids = centroids;
-		paletteMap = genClusters(centroids, pixels);
-		centroids = genCentroids(paletteMap, pixels);
-		//again, force the first centroid to be white
-		if(!useHcpRules) {
-			centroids[0] = [0xFF, 0xFF, 0xFF];
-		}
-		//if the centroids have not changed, then we have converged
-		let hasConverged = true;
-		//iterate over each cluster's centroid
-		outerCheck:
-		for(let j = 0; j < centroids.length; j++) {
-			//iterate over each color channel
-			for(let k = 0; k < 3; k++) {
-				if(centroids[j][k] != oldCentroids[j][k]) {
-					hasConverged = false;
-					break outerCheck;
-				}
-			}
-		}
-		if(hasConverged || i > 100) {
-			break;
-		}
-		i++;
 	}
 	
-	//merge similar centroids
-	//similar meaning if the distance is less than the threshold
-	const threshold = 10;
-	for(let i = 0; i < centroids.length; i++) {
-		if(centroids[i] !== null) {
-			//if a later centroid is found to be too close, mark it null
-			for(let j = i+1; j < centroids.length; j++) {
-				if(centroids[j] !== null && 
-				   dist(centroids[i], centroids[j]) < threshold) {
-					centroids[j] = null;
-					//remap the palette
-					Object.keys(paletteMap).forEach((key) => {
-						if(paletteMap[key] === j) {
-							paletteMap[key] = i;
-						}
-					});
+	//places a color in the given octree
+	function placeColor(octree, r, g, b, n = 0) {
+		//use the nth most significant bit
+		octree.size++;
+		if(octree.isLeaf) {
+			const color = rgbToInt(r,g,b);
+			if(octree.colorCounts[color] === undefined) {
+				octree.colorCounts[color] = 1;
+			} else {
+				octree.colorCounts[color]++;
+			}
+		} else {
+			const pos =
+				((r >> (7-n)) & 1) << 2 |
+				((g >> (7-n)) & 1) << 1 |
+				((b >> (7-n)) & 1)
+			const next = octree.children[pos];
+			placeColor(next, r, g, b, n+1);
+		}
+	}
+
+	//removes empty children
+	//the child slots are set to null rather than being removed
+	//I don't think this is useful
+	function purgeEmpty(octree) {
+		if(!octree.isLeaf) {
+			for(let i = 0; i < 8; i++) {
+				if(octree.children[i].size === 0) {
+					octree.children[i] = null;
+				} else {
+					purgeEmpty(octree.children[i]);
 				}
 			}
-		} 
+		}
 	}
-	centroids = centroids.filter((x) => x !== null);
 
-	return {
-		paletteMap: paletteMap,
-		centroids: centroids,
-	};
+	//finds the number of unique colors on each level
+	//root is level 0
+	function levelCount(octree, level) {
+		if(octree.isLeaf) {
+			return Object.keys(octree.colorCounts).length;
+		} else if (level == 0) {
+			return octree.children.reduce((acc, child) => {
+				return acc + (child.size > 0 ? 1 : 0);
+			}, 0);
+		} else {
+			return octree.children.reduce((acc, child) => {
+				return acc + levelCount(child, level-1);
+			}, 0);
+		}
+	}
+
+	//picks the most popular representative colors from the level
+	function pickBestColors(octree, num) {
+		//get the nodes (may or may not be leaves)
+		//always returns a flat array of octree nodes
+		function getLevel(octree, level) {
+			if(level === 0) {
+				return [octree];
+			} else if(!octree.isLeaf) {
+				return octree.children
+					.map(child => getLevel(child, level-1))
+					.reduce((acc, child) => acc.concat(child), [])
+					.filter(child => child.size > 0)
+			} else {
+				return [];
+			}
+		}
+
+		//picks 1 color from the octree
+		function pickColor(octree) {
+			if(octree.isLeaf) {
+				//picks most popular color
+				const colors = Object.keys(octree.colorCounts);
+				if(colors.length === 0) {
+					return 0x0;//black is a nice default
+				}
+				let best = colors[0];
+				let bestCount = octree.colorCounts[best];
+				colors.forEach(color => {
+					const count = octree.colorCounts[color];
+					if(count > bestCount) {
+						best = color;
+						bestCount = count;
+					}
+				});
+				//Object.keys() converts the keys to strings
+				return parseInt(best, 10);
+			} else {
+				//picks most popular child, calls pickColor on it
+				let best = octree.children[0];
+				octree.children.forEach(child => {
+					if(child.size > best.size) {
+						best = child;
+					}
+				});
+				return pickColor(best);
+			}
+		}
+
+		//picking out which level to use
+		let bestLevel = 0;
+		for(let i = 0; i < octreeHeight; i++) {
+			if(levelCount(octree, i) >= num) {
+				bestLevel = i;
+				break;
+			}
+		}
+
+		//+1 because levelCount() counts the children of a level
+		//and getLevel() counts the level itself
+		const colors = getLevel(octree, bestLevel+1)
+			//sort the nodes (DESC) and pick the num best
+			.sort((a,b) => b.size - a.size)
+			.slice(0, num)
+			.map(pickColor);
+
+		return colors;
+	}
+
+
+	const octreeHeight = 2;
+	const octree = createOctree(octreeHeight);
+
+	//putting all the colors in the octree
+	for(let i = 0; i < img.data.length / 4; i++) {
+		placeColor(octree, img.data[4*i], 
+						   img.data[4*i+1],
+						   img.data[4*i+2]);
+	}
+
+	//num-1 if we'll be adding white later
+	let bestColors = pickBestColors(octree, useHcpRules ? num : num-1);
+	
+	if(!useHcpRules) {
+		//make white the first color
+		bestColors = [0xFFFFFF].concat(bestColors);
+	}
+	
+	//merge colors that are too similar
+	const threshold = 10;
+	for(let i = 0; i < bestColors.length; i++) {
+		if(bestColors[i] === null) {
+			continue;
+		}
+		for(let j = i+1; j < bestColors.length; j++) {
+			if(dist(bestColors[j], bestColors[i]) < threshold) {
+				bestColors[j] = null;
+			}
+		}
+	}
+	bestColors = bestColors.filter(c => c !== null);
+
+	return bestColors;
 }
