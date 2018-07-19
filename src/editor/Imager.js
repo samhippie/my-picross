@@ -1,4 +1,7 @@
 
+//the builder for the image importer
+//it gets the information together and handle communicating with a web worker
+
 //I'm not sure if a factory pattern is good here or if I'm
 //just too used to java
 export class Builder {
@@ -17,12 +20,12 @@ export class Builder {
 	}
 
 	setSize(size) {
-		this.size = size;
+		this.size = parseInt(size, 10);
 		return this;
 	}
 
 	setNumColors(numColors) {
-		this.numColors = numColors;
+		this.numColors = parseInt(numColors, 10);
 		return this;
 	}
 
@@ -73,20 +76,22 @@ export class Builder {
 				const canvas = document.createElement('canvas');
 
 				//calculate the scaling
+				/*
 				const scaleFactor = Math.min(this.size / img.width, 
 											 this.size / img.height);
-				console.log(img.width * scaleFactor, img.height * scaleFactor);
+											 */
 				
-				//canvas.width = img.width;
-				//canvas.height = img.height;
+				canvas.width = img.width;
+				canvas.height = img.height;
 				const context = canvas.getContext('2d');
 				//geometric mean between image size and puzzle size
 				//if we scaled down to the puzzle size, we'd lose a lot
 				//of color information
 				//if we don't scale, processing the image is slow
-				const interWidth = Math.sqrt(scaleFactor) * img.width;
-				const interHeight = Math.sqrt(scaleFactor) * img.height;
-				context.drawImage(img, 0, 0, interWidth, interHeight);
+				//const interWidth = Math.sqrt(scaleFactor) * img.width;
+				//const interHeight = Math.sqrt(scaleFactor) * img.height;
+				//context.drawImage(img, 0, 0, interWidth, interHeight);
+				context.drawImage(img, 0, 0);
 				//pull out the image data from the canvas
 				const imgData = context.getImageData(0, 0, img.width, img.height);
 
