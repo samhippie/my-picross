@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Board from './Board.js';
+import { getRowNumbers } from './Board.js';
 import './game.css';
 import SizeInput from './editor/SizeInput.js';
 import ColorModal from './editor/ColorModal.js';
@@ -9,22 +10,41 @@ import ImportModal from './editor/ImportModal.js';
 class Editor extends Component {
 	constructor(props) {
 		super(props);
+		const width = 5;
+		const height = 5;
 		this.state = {
-			width: 15,
-			height: 15,
-			squares: null,
-			colors: ['white', 'black', 'blue'],
+			width: width,
+			height: height,
+			squares: Array(width*height).fill(0),
+			colors: ['white', 'black'],
 			currentColor: 1,
 			blankColor: 0,
 			useHcpRules: false,
-			//used to re-init board
-			boardKey: 1,
-			//used to control color editor modal
 			isColorModalOpen: false,
 			colorModalColor: null,
 			name: "Untitled",
 			isImportModalOpen: false,
 		}
+	}
+
+
+	genFullRowCounts() {
+		return Array.from({length: this.state.height}, (x,r) => {
+			const row = this.state.squares.slice(r*this.state.width, 
+												 (r+1) * this.state.width);
+			return getRowNumbers(this.state.blankColor, row, 
+				this.state.useHcpRules);
+		});
+	}
+
+	genFullColCounts() {
+		return Array.from({length: this.state.width}, (x,c) => {
+			const col = this.state.squares.filter((x, index) => {
+				return index % this.state.width === c;
+			});
+			return getRowNumbers(this.state.blankColor, col, 
+				this.state.useHcpRules);
+		});
 	}
 
 	handleNameChange(event) {
@@ -33,31 +53,57 @@ class Editor extends Component {
 		});
 	}
 
-	//after the board itself is updated, we need to update the
-	//counts, as we are editting the puzzle, not solving it
-	handleBoardClick(board, i) {
-		board.updateRowCount(Math.floor(i/board.state.width));
-		board.updateColCount(i % board.state.width);
-		this.setState({
-			squares: board.getSquares(),
-		});
+	handleSquareClick(i, event) {
+		//left click, toggle square
+		const squares = this.state.squares.slice();
+		if(event.buttons & 1) {
+			squares[i] = squares[i] !== this.state.currentColor
+						 ? this.state.currentColor
+						 : this.state.blankColor;
+			this.setState({
+				squares: squares,
+			});
+		}
 	}
 
-	//changes the saved board size, but does  not update the current board
+	//changes the board size, adding/deleting rows/cols as appropriate
 	handleSizeChange(width, height) {
+		const oldWidth = this.state.width;
+		const oldHeight = this.state.height;
+
+		let squares = this.state.squares.slice();
+		//use oldWidth here because we haven't changed width yet
+		if(oldHeight < height) {
+			//height increased, add some blank rows
+			squares = squares.concat(Array(oldWidth * (height - oldHeight))
+										.fill(this.state.blankColor));
+		} else if(oldHeight > height) {
+			//height decreased, remove some rows
+			squares.splice(oldWidth * height, oldWidth * (oldHeight - height));
+		}
+		//use height here because we have already changed height
+		if(oldWidth < width) {
+			//width increased, insert some blank squares at the end of each row
+			for(let r = height-1; r >= 0; r--) { 
+				//reverse order to preserve indices on insert
+				for(let j = oldWidth; j < width; j++) {
+					squares.splice((r+1) * oldWidth, 0, this.state.blankColor);
+				}
+			}
+		} else if(oldWidth > width) {
+			//width decreased, delete some squares at the end of each row
+			for(let r = height-1; r >= 0; r--) { 
+				//reverse order to preserve indicies on delete
+				squares.splice(r*oldWidth + width, oldWidth - width);
+			}
+		}
 		this.setState({
 			width: width,
 			height: height,
+			squares: squares,
 		});
 	}
-
-	//creates a new board, useful for changing board size
-	handleNewBoard() {
-		this.setState({
-			boardKey: this.state.boardKey+1,
-		});
-	}
-
+	
 	//changes the current color for drawing
 	handleColorSelect(i) {
 		this.setState({
@@ -103,7 +149,9 @@ class Editor extends Component {
 		});
 	}
 
-	handleSave() {
+	handleUpload() {
+		//TODO
+		
 		//get all the important data together
 		const data = {
 			version: 1,
@@ -170,7 +218,6 @@ class Editor extends Component {
 			<SizeInput 
 				width={this.state.width}
 				height={this.state.height}
-				onSubmit={() => this.handleNewBoard()}
 				onChange={(w,h) => this.handleSizeChange(w,h)}
 			/>
 		);
@@ -187,13 +234,13 @@ class Editor extends Component {
 		);
 	}
 
-	renderSaveButton() {
+	renderUploadButton() {
 		return (
 			<button
 				className="save-button"
-				onClick={() => this.handleSave()}
+				onClick={() => this.handleUpload()}
 			>
-				Save
+				Upload
 			</button>
 		)
 	}
@@ -254,11 +301,14 @@ class Editor extends Component {
 				width={this.state.width}
 				height={this.state.height}
 				squares={this.state.squares}
+				blockSize={5}
 				colors={this.state.colors}
 				blankColor={0}
 				currentColor={this.state.currentColor}
 				useHcpRules={this.state.useHcpRules}
-				onClick={(board, i) => this.handleBoardClick(board, i)}
+				rowCounts={this.genFullRowCounts()}
+				colCounts={this.genFullColCounts()}
+				onSquareClick={(i,e) => this.handleSquareClick(i,e)}
 			/>
 		);
 	}
@@ -267,12 +317,13 @@ class Editor extends Component {
 	render() {
 		return (
 			<div>
-				<h2>Editor</h2>
-				{this.renderNameInput()}
+				<div className="in-a-row">
+					{this.renderNameInput()}
+					{this.renderUploadButton()}
+				</div>
 				<div className="in-a-row">
 					{this.renderSizeInput()}
 					{this.renderImportButton()}
-					{this.renderSaveButton()}
 				</div>
 				<div className="in-a-row">
 					<div>

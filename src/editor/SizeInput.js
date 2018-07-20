@@ -5,18 +5,18 @@ import React, { Component } from 'react';
 
 class SizeInput extends Component {
 	handleWidthChange(event) {
-		const width = event.target.value;
+		const width = parseInt(event.target.value, 10);
 		this.props.onChange(width, this.props.height);
 	}
 
 	handleHeightChange(event) {
-		const height = event.target.value;
+		const height = parseInt(event.target.value, 10);
 		this.props.onChange(this.props.width, height);
 	}
 
 	render() {
 		return (
-			<form className="size-input" onSubmit={() => this.props.onSubmit()}>
+			<form className="size-input">
 				<label htmlFor="widthInput">Width </label>
 				<input 
 					id="widthInput" 
@@ -35,7 +35,6 @@ class SizeInput extends Component {
 					value={this.props.height}
 					onChange={(e) => this.handleHeightChange(e)}
 				/>
-				<input type="submit" value="New Board" />
 			</form>
 		);
 	}

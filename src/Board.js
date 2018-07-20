@@ -126,204 +126,13 @@ class CountSquare extends Component {
 }
 
 class Board extends Component {
-	constructor(props) {
-		super(props);
-		const width = props.width;
-		const height = props.height || 15;
-		const squares = props.squares || Array(width * height).fill(props.blankColor);
-		const blockSize = props.blockSize || 5;
-		const solSquares = props.solSquares;
-		this.state = {
-			width: width,
-			height: height,
-			blockSize: blockSize,
-			squares: squares,
-			rowCounts: Array(height).fill(null),
-			colCounts: Array(width).fill(null),
-			rowCompleted: Array(height).fill(false),
-			colCompleted: Array(width).fill(false),
-			isFinished: false,
-		}
-
-		//if there is a given solution, use that for making the row counts
-		//else, just use the blank squares
-		let countSrc = solSquares
-						? solSquares
-						: squares;
-
-		//init row counts
-		this.state.rowCounts = Array.from({length: height}, (x,r) => {
-			const row = countSrc.slice(r*width, (r+1) * width);
-			return getRowNumbers(this.props.blankColor, row, false);
-		});
-		this.state.hcpRowCounts = Array.from({length: height}, (x,r) => {
-			const row = countSrc.slice(r*width, (r+1) * width);
-			return getRowNumbers(this.props.blankColor, row, true);
-		});
-
-		//init col counts
-		this.state.colCounts = Array.from({length: width}, (x,c) => {
-			const col = countSrc.filter((x, index) => {
-				return index % width === c;
-			});
-			return getRowNumbers(this.props.blankColor, col, 
-				false);
-		});
-		this.state.hcpColCounts = Array.from({length: width}, (x,c) => {
-			const col = countSrc.filter((x, index) => {
-				return index % width === c;
-			});
-			return getRowNumbers(this.props.blankColor, col, 
-				true);
-		});
-
-	}
-
-	updateRowCount(r) {
-		const width = this.state.width;
-		const row = this.state.squares.slice(r*width, (r+1) * width);
-		let rowCounts = this.state.rowCounts.slice();
-		rowCounts[r] = getRowNumbers(this.props.blankColor, row, false);
-		this.setState({
-			rowCounts: rowCounts,
-		});
-		let hcpRowCounts = this.state.hcpRowCounts.slice();
-		hcpRowCounts[r] = getRowNumbers(this.props.blankColor, row, true);
-		this.setState({
-			hcpRowCounts: hcpRowCounts,
-		});
-
-	}
-	
-	updateColCount(c) {
-		const width = this.state.width;
-		const col = this.state.squares.filter((sq, index) => {
-			return index % width === c;
-		});
-		let colCounts = this.state.colCounts.slice();
-		colCounts[c] = getRowNumbers(this.props.blankColor, col, false);
-		this.setState({
-			colCounts: colCounts,
-		});
-
-		let hcpColCounts = this.state.hcpColCounts.slice();
-		hcpColCounts[c] = getRowNumbers(this.props.blankColor, col, true);
-		this.setState({
-			hcpColCounts: hcpColCounts,
-		});
-	}
-
-	//generic check for color count equality
-	countCheck(a, b) {
-		//remove any blank or crossed-out blocks
-		const aNorm = a.filter(v => v.colorIndex !== this.props.blankColor && v.colorIndex !== -1);
-		const bNorm = b.filter(v => v.colorIndex !== this.props.blankColor && v.colorIndex !== -1);
-		if(aNorm.length !== bNorm.length) {
-			return false;
-		}
-		//simple check for pairwise equality
-		for(let i = 0; i < aNorm.length; i++) {
-			if(aNorm[i].colorIndex !== bNorm[i].colorIndex || 
-				aNorm[i].count !== bNorm[i].count) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	//checks if game is finished, calls callback if it exists
-	checkFinished() {
-		if(this.state.rowCompleted.reduce((acc, val) => acc && val, true) &&
-		   this.state.colCompleted.reduce((acc, val) => acc && val, true)) {
-			this.setState({
-				isFinished: true,
-			}, () => {
-				if(this.props.onFinish) {
-					this.props.onFinish(this);
-				}
-			});
-	   }
-	}
-
-	//updates rowCompleted if the given row is completed
-	checkRowCompleted(r) {
-		const width = this.state.width;
-		const row = this.state.squares.slice(r*width, (r+1) * width);
-		const rowCount = getRowNumbers(this.props.blankColor, row, 
-			this.props.useHcpRules);
-		const target = this.props.useHcpRules 
-							? this.state.hcpRowCounts[r]
-							: this.state.rowCounts[r];
-		const same = this.countCheck(target, rowCount);
-		const rowCompleted = this.state.rowCompleted.slice();
-		rowCompleted[r] = same;
-		this.setState({
-			rowCompleted: rowCompleted,
-		}, () => {this.checkFinished()});
-	}
-
-	//updates colCompleted if the given column is completed
-	checkColCompleted(c) {
-		const width = this.state.width;
-		const col = this.state.squares.filter((sq, index) => {
-			return index % width === c;
-		});
-		const colCount = getRowNumbers(this.props.blankColor, col, 
-			this.props.useHcpRules);
-		const target = this.props.useHcpRules 
-							? this.state.hcpColCounts[c]
-							: this.state.colCounts[c];
-		const same = this.countCheck(target, colCount);
-		const colCompleted = this.state.colCompleted.slice();
-		colCompleted[c] = same;
-		this.setState({
-			colCompleted: colCompleted,
-		}, () => {this.checkFinished()});
-	}
-	
-	getSquares() {
-		return this.state.squares;
-	}
-
-	handleClick(i, event) {
-		//don't let the user do anything if they've finished the puzzle
-		if(this.state.isFinished) {
-			return;
-		}
-		const squares = this.state.squares.slice();
-		//on left click, color the square in
-		//on right click, cross it out
-		if(event.buttons & 1) {
-			if(squares[i] === this.props.currentColor) {
-				squares[i] = 0;
-			} else {
-				squares[i] = this.props.currentColor;
-			}
-		} else if(event.buttons & 2 && this.props.enableRightClick) {
-			if(squares[i] === -1) {
-				squares[i] = 0;
-			} else {
-				squares[i] = -1;
-			}
-		} else {
-			return;//nothing to do
-		}
-		this.setState({
-			squares: squares,
-		}, () => {
-			if (this.props.onClick) {
-				this.props.onClick(this, i);
-			}
-		});
-
-	}
 
 	renderSquare(i) {
 		//we use the thick outline to divide the board into 5x5 blocks
 		//the top left corner is always the corner of a block
-		const r = Math.floor(i / this.state.width);
-		const c = i % this.state.width;
-		const blockSize = this.state.blockSize;
+		const r = Math.floor(i / this.props.width);
+		const c = i % this.props.width;
+		const blockSize = this.props.blockSize;
 		let outline = Directions.NONE;
 		if (r % blockSize === 0) {
 			outline |= Directions.TOP;
@@ -340,11 +149,11 @@ class Board extends Component {
 		return (
 			<Square 
 				key={i}
-				color={this.props.colors[this.state.squares[i]]}
-				onClick={(e) => this.handleClick(i,e)}
+				color={this.props.colors[this.props.squares[i]]}
+				onClick={(e) => this.props.onSquareClick(i,e)}
 				thickOutline={outline}
-				isCrossedOut={this.state.squares[i] === -1}
-				isFinished={this.state.isFinished}
+				isCrossedOut={this.props.squares[i] === -1}
+				isFinished={this.props.isFinished}
 			/>
 		);
 	}
@@ -353,7 +162,7 @@ class Board extends Component {
 		//render all the squares, and then render the row's count squares
 		return (
 			<div key= {r} className="board-row">
-				{Array.from({length: this.state.width}, (x,i) => this.renderSquare(r*this.state.width + i))}
+				{Array.from({length: this.props.width}, (x,i) => this.renderSquare(r*this.props.width + i))}
 				{this.renderCountSquare(true, r)}
 			</div>
 		);
@@ -361,15 +170,16 @@ class Board extends Component {
 
 	renderCountSquare(isRow, i) {
 		const value = isRow
-						? (this.props.useHcpRules 
-							? this.state.hcpRowCounts[i]
-							: this.state.rowCounts[i])
-						: (this.props.useHcpRules
-							? this.state.hcpColCounts[i]
-							: this.state.colCounts[i]);
+						? this.props.rowCounts[i]
+						: this.props.colCounts[i];
+		//rowCompleted (/col) might be undefined
 		const isComplete = isRow
-							? this.state.rowCompleted[i]
-							: this.state.colCompleted[i];
+							? (this.props.rowCompleted
+								? this.props.rowCompleted[i]
+								: false)
+							: (this.props.colCompleted
+								? this.props.colCompleted[i]
+								: false);
 		return (
 			<CountSquare 
 				key={(isRow? 1 : -1) * i}
@@ -387,7 +197,7 @@ class Board extends Component {
 	renderColCounts() {
 		return (
 			<div className="board-row">
-				{this.state.colCounts.map((elem, index) => {
+				{this.props.colCounts.map((elem, index) => {
 					return this.renderCountSquare(false, index);
 				})}
 			</div>
@@ -397,7 +207,7 @@ class Board extends Component {
 	render() {
 		return (
 			<div className="board">
-				{Array.from({length: this.state.height}, (x,i) => this.renderRow(i))}
+				{Array.from({length: this.props.height}, (x,i) => this.renderRow(i))}
 				{this.renderColCounts()}
 			</div>
 		);
@@ -406,7 +216,7 @@ class Board extends Component {
 
 //returns a list of pairs, (color index, # of blocks)
 //does this for all colors, including white
-function getRowNumbers(blankColor, row, useHcpRules) {
+export function getRowNumbers(blankColor, row, useHcpRules) {
 	if(!useHcpRules) {
 		//count the number of clusters of pixels of the same color
 		let nums = [];
