@@ -68,6 +68,7 @@ class EndModal extends Component {
 	}
 }
 
+//FIXME row completion isn't working for HCP games (regular games untested)
 class Game extends Component {
 	constructor(props) {
 		super(props);

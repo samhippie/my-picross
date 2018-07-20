@@ -18,9 +18,9 @@ class Player extends Component {
 		}
 	}
 
-	loadTestGame() {
+	loadTestGame(i) {
 		//load test game
-		const encGameData = getTestGameData(1);
+		const encGameData = getTestGameData(i);
 		this.setState({
 			game: {
 				data: JSON.parse(atob(encGameData)),
@@ -45,9 +45,19 @@ class Player extends Component {
 				<div>
 					<p>Loading Game</p>
 					<button
-						onClick={() => this.loadTestGame()}
+						onClick={() => this.loadTestGame(0)}
 					>
-						Play test game
+						Play test game 0
+					</button>
+					<button
+						onClick={() => this.loadTestGame(1)}
+					>
+						Play test game 1
+					</button>
+					<button
+						onClick={() => this.loadTestGame(2)}
+					>
+						Play test game 2
 					</button>
 				</div>
 			);
@@ -64,12 +74,17 @@ class Player extends Component {
 	}
 }
 
+const testGames = [
+	"eyJ2ZXJzaW9uIjoxLCJuYW1lIjoiTXkgSENQIFRlc3QgR2FtZSIsIndpZHRoIjoiNSIsImhlaWdodCI6IjUiLCJjb2xvcnMiOlsid2hpdGUiLCJibGFjayIsInZpb2xldCJdLCJibGFua0NvbG9yIjowLCJ1c2VIY3BSdWxlcyI6dHJ1ZSwic3F1YXJlcyI6WzIsMiwyLDIsMiwwLDIsMiwyLDAsMCwyLDIsMiwwLDAsMiwyLDIsMCwyLDAsMCwwLDIsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwXX0=",
+	
+"eyJ2ZXJzaW9uIjoxLCJuYW1lIjoiVGVzdCBQdXp6bGUiLCJ3aWR0aCI6IjEwIiwiaGVpZ2h0IjoiMTAiLCJjb2xvcnMiOlsid2hpdGUiLCJibGFjayIsImJsdWUiXSwiYmxhbmtDb2xvciI6MCwidXNlSGNwUnVsZXMiOmZhbHNlLCJzcXVhcmVzIjpbMSwxLDEsMCwyLDIsMiwwLDAsMSwxLDAsMCwwLDIsMCwyLDAsMCwxLDEsMSwxLDAsMiwyLDIsMCwwLDEsMCwwLDEsMCwyLDAsMiwwLDAsMSwxLDEsMSwwLDIsMCwyLDAsMCwxLDEsMCwwLDAsMSwwLDAsMCwwLDEsMSwxLDAsMSwxLDAsMCwwLDAsMSwxLDAsMSwwLDEsMiwyLDIsMiwyLDEsMCwwLDAsMSwyLDIsMiwyLDIsMSwwLDAsMCwxLDIsMiwyLDIsMl19",
+
+"eyJ2ZXJzaW9uIjoxLCJuYW1lIjoiVW50aXRsZWQiLCJ3aWR0aCI6MTUsImhlaWdodCI6MTUsImNvbG9ycyI6WyIjZmZmZmZmIiwiI2NiMGIzYyIsIiMwMDk3ZWEiLCIjZjRjMzgwIiwiIzEzMGMxYyJdLCJibGFua0NvbG9yIjowLCJ1c2VIY3BSdWxlcyI6dHJ1ZSwic3F1YXJlcyI6WzIsMiwyLDIsMiwyLDIsMiwyLDIsMiwyLDIsMiwyLDIsMiwyLDIsMiwyLDIsMiwyLDIsMiwyLDIsMiwyLDIsMiwyLDIsMiwxLDEsMSwxLDEsMSwyLDIsMiwyLDIsMiwyLDIsMSwxLDEsMSwxLDEsMSwxLDIsMCwwLDIsMiwyLDEsMSwxLDEsMSwxLDEsMSwxLDEsMCwwLDIsMiwxLDEsMSwxLDEsMSwxLDEsMSwxLDEsMSwwLDIsMiwxLDEsMSwxLDEsMCwwLDQsNCwxLDEsMSwxLDIsNCwwLDEsMywzLDMsMCwwLDQsNCwxLDEsMSwxLDIsNCwzLDMsMywzLDMsMywzLDMsMywzLDEsMSwxLDIsMSwzLDMsMywzLDMsMywzLDMsMywzLDEsMSwxLDEsMSwxLDEsMywzLDMsMywzLDMsMSwxLDEsMSwxLDEsMSwxLDEsMSwzLDMsMywxLDMsMSwzLDEsMSwxLDEsMSwxLDEsMSwxLDEsMSwxLDMsNCwzLDEsMywxLDEsMSwxLDEsMSwxLDEsMSwxLDMsMSwzLDEsMywxLDEsMSwxLDEsMSwxLDEsMSwxLDEsMSwxLDEsMSwxXX0=",
+
+]
+
 function getTestGameData(i) {
-	if(i === 0) {
-		return "eyJ2ZXJzaW9uIjoxLCJuYW1lIjoiVGVzdCBQdXp6bGUiLCJ3aWR0aCI6IjEwIiwiaGVpZ2h0IjoiMTAiLCJjb2xvcnMiOlsid2hpdGUiLCJibGFjayIsImJsdWUiXSwiYmxhbmtDb2xvciI6MCwidXNlSGNwUnVsZXMiOmZhbHNlLCJzcXVhcmVzIjpbMSwxLDEsMCwyLDIsMiwwLDAsMSwxLDAsMCwwLDIsMCwyLDAsMCwxLDEsMSwxLDAsMiwyLDIsMCwwLDEsMCwwLDEsMCwyLDAsMiwwLDAsMSwxLDEsMSwwLDIsMCwyLDAsMCwxLDEsMCwwLDAsMSwwLDAsMCwwLDEsMSwxLDAsMSwxLDAsMCwwLDAsMSwxLDAsMSwwLDEsMiwyLDIsMiwyLDEsMCwwLDAsMSwyLDIsMiwyLDIsMSwwLDAsMCwxLDIsMiwyLDIsMl19";
-	} else {
-		return "eyJ2ZXJzaW9uIjoxLCJuYW1lIjoiTXkgSENQIFRlc3QgR2FtZSIsIndpZHRoIjoiNSIsImhlaWdodCI6IjUiLCJjb2xvcnMiOlsid2hpdGUiLCJibGFjayIsInZpb2xldCJdLCJibGFua0NvbG9yIjowLCJ1c2VIY3BSdWxlcyI6dHJ1ZSwic3F1YXJlcyI6WzIsMiwyLDIsMiwwLDIsMiwyLDAsMCwyLDIsMiwwLDAsMiwyLDIsMCwyLDAsMCwwLDIsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwXX0="
-	}
+	return testGames[i];
 }
 
 export default Player;

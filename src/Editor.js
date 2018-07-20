@@ -10,8 +10,8 @@ import ImportModal from './editor/ImportModal.js';
 class Editor extends Component {
 	constructor(props) {
 		super(props);
-		const width = 5;
-		const height = 5;
+		const width = 15;
+		const height = 15;
 		this.state = {
 			width: width,
 			height: height,
@@ -24,6 +24,7 @@ class Editor extends Component {
 			colorModalColor: null,
 			name: "Untitled",
 			isImportModalOpen: false,
+			colorGen: colorGenerator(),
 		}
 	}
 
@@ -121,17 +122,25 @@ class Editor extends Component {
 	}
 
 	//removes the color from the puzzle
-	handleColorRemove(i) {
+	//deletes any instances of the color in squares
+	handleColorRemove(colorIndex) {
 		const colors = this.state.colors.slice();
-		colors.splice(i, 1);
+		colors.splice(colorIndex, 1);
+		const squares = this.state.squares.slice();
+		for(let i = 0; i < squares.length; i++) {
+			if(squares[i] === colorIndex) {
+				squares[i] = this.state.blankColor;
+			}
+		}
 		this.setState({
 			colors: colors,
+			squares: squares,
 		});
 	}
 
 	handleColorAdd() {
 		const colors = this.state.colors.slice();
-		colors.push(getRandomColor());
+		colors.push(this.state.colorGen.next().value);
 		this.setState({
 			colors: colors,
 		});
@@ -192,7 +201,6 @@ class Editor extends Component {
 			blankColor: 0,
 			currentColor: 1,
 			squares: data.squares,
-			boardKey: this.state.boardKey + 1,
 			isImportModalOpen: false,
 		});
 	}
@@ -339,7 +347,8 @@ class Editor extends Component {
 	}
 }
 
-function getRandomColor() {
+//yields some colors to be added
+function* colorGenerator() {
 	//rainbow colors, because why not
 	const colors = [
 		'red',
@@ -350,8 +359,10 @@ function getRandomColor() {
 		'indigo',
 		'violet'
 	];
-	const i = Math.floor(Math.random()*colors.length)
-	return colors[i];
+	let i = 0;
+	while(true) {
+		yield colors[(i++) % colors.length];
+	}
 }
 
 export default Editor;
