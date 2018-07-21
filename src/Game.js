@@ -68,17 +68,11 @@ class EndModal extends Component {
 	}
 }
 
-//FIXME row completion isn't working for HCP games (regular games untested)
 class Game extends Component {
 	constructor(props) {
 		super(props);
 		const gameData = props.gameData;
-		//const id = this.props.match.params.id;
-		//we would fetch the game from somewhere
-		//const encGameData = getTestGameData();
-		//const gameData = JSON.parse(atob(encGameData));
-		//stores what the user has done, not the solution
-		const squares = Array(gameData.width * gameData.height).fill(gameData.blankColor);
+		const squares = Array(gameData.width * gameData.height).fill(gameData.useHcpRules);
 		this.state = {
 			name: gameData.name,
 			width: gameData.width,
@@ -97,6 +91,7 @@ class Game extends Component {
 			showEndModal: false,
 		};
 
+		console.log(gameData)
 		//init row/col counts
 		this.state.rowCounts = Array.from({length: gameData.height}, (x,r) => {
 			const row = this.state.solSquares.slice(r*gameData.width, (r+1) * gameData.width);
@@ -149,7 +144,7 @@ class Game extends Component {
 		const width = this.state.width;
 		const row = this.state.squares.slice(r*width, (r+1) * width);
 		const rowCount = getRowNumbers(this.props.blankColor, row, 
-			this.props.useHcpRules);
+			this.state.useHcpRules);
 		const target = this.state.rowCounts[r];
 		const same = this.countCheck(target, rowCount);
 		const rowCompleted = this.state.rowCompleted.slice();
@@ -167,11 +162,9 @@ class Game extends Component {
 			return index % width === c;
 		});
 		const colCount = getRowNumbers(this.props.blankColor, col, 
-			this.props.useHcpRules);
+			this.state.useHcpRules);
 		const target = this.state.colCounts[c];
 		const same = this.countCheck(target, colCount);
-		console.log("target", target);
-		console.log("current", colCount);
 		const colCompleted = this.state.colCompleted.slice();
 		colCompleted[c] = same;
 		this.setState({
@@ -211,7 +204,6 @@ class Game extends Component {
 	}
 
 	handleFinish(board) {
-		console.log("finished!");
 		this.setState({
 			isFinished: true,
 			showEndModal: true,
@@ -255,6 +247,7 @@ class Game extends Component {
 				currentColor={this.state.currentColor}
 				useHcpRules={this.state.useHcpRules}
 				squares={this.state.squares}
+				isFinished={this.state.isFinished}
 				rowCounts={this.state.rowCounts}
 				colCounts={this.state.colCounts}
 				rowCompleted={this.state.rowCompleted}

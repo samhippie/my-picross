@@ -17,7 +17,7 @@ class Square extends Component {
 		if(this.props.isCrossedOut) {
 			style.backgroundColor = 'white';
 			value = 'X';
-		}
+		} 
 		//just show the color if it's finished
 		if(this.props.isFinished) {
 			value = null;
@@ -70,12 +70,14 @@ class CountSquare extends Component {
 
 	renderText(colorIndex, text, key, isSpecial) {
 		const style = {};
-		if(this.state.isHovered) {
+		//if(this.state.isHovered) {
 			style.color = 'white';
 			style.backgroundColor = this.props.colors[colorIndex];
+		/*
 		} else {
 			style.color = this.props.colors[colorIndex];
 		}
+		*/
 		if(isSpecial) {
 			style.fontStyle = 'oblique';
 			text = text + "*"
@@ -150,6 +152,7 @@ class Board extends Component {
 			<Square 
 				key={i}
 				color={this.props.colors[this.props.squares[i]]}
+				isBlank={this.props.squares[i] === -2}
 				onClick={(e) => this.props.onSquareClick(i,e)}
 				thickOutline={outline}
 				isCrossedOut={this.props.squares[i] === -1}

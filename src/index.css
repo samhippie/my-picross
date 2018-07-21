@@ -110,11 +110,20 @@ ul.header li a {
 }
 
 .count-square-col {
+	/*
 	background: #DDDDDD;
 	border: 1px solid #000000;
+	*/
 	float: left;
 	font-size: 18px;
 	font-weight: normal;
+	font-family: sans-serif;
+	text-shadow: 
+		-1px -1px 0 #000000,
+		1px -1px 0 #000000,
+		-1px 1px 0 #000000,
+		1px 1px 0 #000000;
+
 	margin-right: -1px;
 	margin-top: -1px;
 	padding: 0;
@@ -131,11 +140,19 @@ ul.header li a {
 }
 
 .count-square-row {
+	/*
 	background: #DDDDDD;
 	border: 1px solid #000000;
+	*/
 	font-size: 18px;
 	font-weight: normal;
 	line-height: 34px;
+	font-family: sans-serif;
+	text-shadow: 
+		-1px -1px 0 #000000,
+		1px -1px 0 #000000,
+		-1px 1px 0 #000000,
+		1px 1px 0 #000000;
 	height: 34px;
 	min-width: 34px;
 	margin-right: -1px;
