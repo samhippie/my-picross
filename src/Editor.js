@@ -6,6 +6,7 @@ import SizeInput from './editor/SizeInput.js';
 import ColorModal from './editor/ColorModal.js';
 import ColorPicker from './editor/ColorPicker.js';
 import ImportModal from './editor/ImportModal.js';
+import UploadModal from './editor/UploadModal.js';
 
 class Editor extends Component {
 	constructor(props) {
@@ -25,6 +26,7 @@ class Editor extends Component {
 			name: "Untitled",
 			isImportModalOpen: false,
 			colorGen: colorGenerator(),
+			isUploadModalOpen: false,
 		}
 	}
 
@@ -158,6 +160,18 @@ class Editor extends Component {
 		});
 	}
 
+	handleShowUpload() {
+		this.setState({
+			isUploadModalOpen: true,
+		});
+	}
+
+	handleCloseUpload() {
+		this.setState({
+			isUploadModalOpen: false,
+		});
+	}
+
 	handleUpload() {
 		//TODO
 		
@@ -246,7 +260,7 @@ class Editor extends Component {
 		return (
 			<button
 				className="save-button"
-				onClick={() => this.handleUpload()}
+				onClick={() => this.handleShowUpload()}
 			>
 				Upload
 			</button>
@@ -284,6 +298,17 @@ class Editor extends Component {
 				show={this.state.isImportModalOpen}
 				onClose={() => this.handleCloseImport()}
 				onImport={d => this.handleImport(d)}
+			/>
+		);
+	}
+
+	renderUploadModal() {
+		return (
+			<UploadModal
+				show={this.state.isUploadModalOpen}
+				isLoggedIn={this.props.isLoggedIn}
+				onClose={() => this.handleCloseUpload()}
+				onSubmit={(u,n) => this.handleUpload(u, n)}
 			/>
 		);
 	}
@@ -326,7 +351,6 @@ class Editor extends Component {
 		return (
 			<div>
 				<div className="in-a-row">
-					{this.renderNameInput()}
 					{this.renderUploadButton()}
 				</div>
 				<div className="in-a-row">
@@ -342,6 +366,7 @@ class Editor extends Component {
 				</div>
 				{this.renderColorModal()}
 				{this.renderImportModal()}
+				{this.renderUploadModal()}
 			</div>
 		);
 	}

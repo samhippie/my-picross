@@ -33,6 +33,15 @@ class Square extends Component {
 			} if (this.props.thickOutline & Directions.BOTTOM) {
 				style['borderBottomWidth'] = '2px';
 			}
+
+			if(this.props.isRowHighlight) {
+				style['borderBottomWidth'] = '3px';
+				style['borderTopWidth'] = '3px';
+			} 
+			if(this.props.isColHighlight) {
+				style['borderLeftWidth'] = '3px';
+				style['borderRightWidth'] = '3px';
+			}
 		}
 		return (
 			<button 
@@ -128,6 +137,30 @@ class CountSquare extends Component {
 }
 
 class Board extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			rowHightlight: null,
+			colHightlight: null,
+		};
+	}
+
+	handleSquareClick(i, event) {
+		const r = Math.floor(i / this.props.width);
+		const c = i % this.props.width;
+		this.setState({
+			rowHighlight: r,
+			colHighlight: c,
+		});
+		this.props.onSquareClick(i, event);
+	}
+
+	handleMouseLeave() {
+		this.setState({
+			rowHighlight: null,
+			colHighlight: null,
+		});
+	}
 
 	renderSquare(i) {
 		//we use the thick outline to divide the board into 5x5 blocks
@@ -153,10 +186,12 @@ class Board extends Component {
 				key={i}
 				color={this.props.colors[this.props.squares[i]]}
 				isBlank={this.props.squares[i] === -2}
-				onClick={(e) => this.props.onSquareClick(i,e)}
+				onClick={(e) => this.handleSquareClick(i,e)}
 				thickOutline={outline}
 				isCrossedOut={this.props.squares[i] === -1}
 				isFinished={this.props.isFinished}
+				isRowHighlight={this.state.rowHighlight === r}
+				isColHighlight={this.state.colHighlight === c}
 			/>
 		);
 	}
@@ -209,7 +244,10 @@ class Board extends Component {
 
 	render() {
 		return (
-			<div className="board">
+			<div 
+				className="board"
+				onMouseLeave={() => this.handleMouseLeave()}
+			>
 				{Array.from({length: this.props.height}, (x,i) => this.renderRow(i))}
 				{this.renderColCounts()}
 			</div>

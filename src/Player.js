@@ -65,6 +65,11 @@ class Player extends Component {
 		return (
 			<div>
 				<h2>{this.state.game.data.name}</h2>
+				<p>					
+					{this.state.game.data.useHcpRules
+						? "HCP Rules"
+						: "Vanilla Picross Rules"}
+				</p>
 				<Game
 					gameData={this.state.game.data}
 					onGoHome={() => this.handleGoHome()}

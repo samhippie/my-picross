@@ -18,6 +18,19 @@ ul.header li {
 	margin: 0;
 }
 
+.log-in {
+	float: right;
+	padding: 20px;
+	display: flex;
+	flex-direction: row;
+	cursor: default;
+}
+
+.in-a-row {
+	display: flex;
+	flex-direction: row;
+}
+
 ul.header {
 	background-color: #DDDDDD;
 	padding: 0;
