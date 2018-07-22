@@ -1,3 +1,7 @@
+
+//main single-page UI of app
+//handles navigation and firebase authentication
+
 import React, { Component } from 'react';
 import {
 	Route,
@@ -7,36 +11,93 @@ import {
 import Browser from './Browser';
 import Editor from './Editor';
 import Player from './Player';
+import SignInModal from './SignInModal';
+import firebase, { firebaseui } from './firebase.js';
 
 class Main extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			isLoggedIn: false,
-			username: null,
+			user: null,
+			isShowingAuthModal: false,
+			isLoadingAuthUi: false,
 		};
+		this.signInUi = new firebaseui.auth.AuthUI(firebase.auth());
 	}
 
+	componentDidMount() {
+		firebase.auth().onAuthStateChanged((user) => {
+			if(user) {
+				this.setState({
+					user: user,
+				});
+			} else {
+				this.setState({
+					user: null,
+				});
+			}
+		});
+	}
+
+	//handler for actually being signed in via firebase
+	handleSignIn(authResult, redirectUrl) {
+		this.setState({
+			isShowingAuthModal: false,
+		});
+		return true;
+	}
+
+	//handler for the user clicking "log in"
 	handleLogIn() {
+		//show the loader
 		this.setState({
-			isLoggedIn: true,
-			username: "Joe Blow",
+			isShowingAuthModal: true,
+			isLoadingAuthUi: true,
+		}, () => {
+			//set up to log in with google
+			const uiConfig = {
+				callbacks: {
+					signInSuccessWithAuthResult: (ar,ru) => 
+						{this.handleSignIn(ar,ru)},
+					uiShown: () => {this.setState({
+						isLoadingAuthUi: false,
+					})},
+				},
+				signInFlow: 'popup',
+				signInOptions: [
+					{
+						provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+						authMethod: 'https://accounts.google.com',
+					},
+				],
+				//TODO
+				//tosUrl: 'https://example.com',
+				//privacyPolicyUrl: 'https://example.com',
+			}
+			this.signInUi.start('#firebaseui-auth-container', uiConfig);
 		});
 	}
 
-	handleLogOut() {
+	//the modal has request to be closed without signing in
+	handleSignInClose() {
+		this.signInUi.reset();
 		this.setState({
-			isLoggedIn: false,
+			isShowingAuthModal: false,
 		});
+	}
+
+	//handler for "Log Out" being clicked
+	handleLogOut() {
+		firebase.auth().signOut();
 	}
 
 	renderLogIn() {
-		if(this.state.isLoggedIn) {
+		if(this.state.user) {
 			return (
 				<div className="log-in">
 					<div className="in-a-row">
 						<div>
-							Logged in as {this.state.username}.
+							{this.state.user.displayName}
 						</div>
 						<div 
 							style={{
@@ -44,7 +105,7 @@ class Main extends Component {
 								'paddingLeft': '8px',
 							}}
 							onClick={() => this.handleLogOut()}>
-							Log Out
+							(Log Out)
 						</div>
 					</div>
 				</div>
@@ -64,7 +125,7 @@ class Main extends Component {
 	renderEditor() {
 		return (
 			<Editor 
-				isLoggedIn={this.state.isLoggedIn}
+				user={this.state.user}
 			/>
 		);
 	}
@@ -106,6 +167,10 @@ class Main extends Component {
 							path="/play/:id" 
 							component={Player}/>
 					</div>
+					<SignInModal
+						show={this.state.isShowingAuthModal}
+						onClose={() => this.handleSignInClose()}
+					/>
 				</div>
 			</HashRouter>
 		);

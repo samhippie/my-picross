@@ -306,7 +306,7 @@ class Editor extends Component {
 		return (
 			<UploadModal
 				show={this.state.isUploadModalOpen}
-				isLoggedIn={this.props.isLoggedIn}
+				isLoggedIn={this.props.user !== null}
 				onClose={() => this.handleCloseUpload()}
 				onSubmit={(u,n) => this.handleUpload(u, n)}
 			/>
