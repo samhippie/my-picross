@@ -2,77 +2,14 @@ import React, { Component } from 'react';
 import Board from './Board.js';
 import { getRowNumbers } from './Board.js';
 import './game.css'
-
-//this is a bit different from the one in Editor.js
-//If I have to make a third iteration, then I'm going to abstract it out
-class ColorPicker extends Component {
-
-	renderColorEntry(color, index) {
-		if(!this.props.useHcpRules && index === this.props.blankColor) {
-			return null;
-		}
-		const buttonStyle = {backgroundColor: color};
-		if(index === this.props.currentColor) {
-			buttonStyle.outline = '2px solid #F99034';
-		}
-		return (
-			<li key={color + "|" + index}>
-				<button 
-					className="color-button"
-					style={buttonStyle}
-					onClick={() => this.props.onSelect(index)}
-				/>
-			</li>
-		);
-	}
-
-	render() {
-		const colors = this.props.colors;
-		return (
-			<ul className="color-picker">
-				{colors.map((c,i) => this.renderColorEntry(c,i))}
-			</ul>
-		);
-	}
-}
-
-class EndModal extends Component {
-	handleClose() {
-		this.props.onClose();
-	}
-
-	handleHome() {
-		this.props.onHome();
-	}
-
-	render() {
-		if(!this.props.show) {
-			return null;
-		}
-
-		return (
-			<div className="modal-backdrop">
-				<div className="modal">
-					<p>You have completed "{this.props.name}"</p>
-					<div className="modal-footer">
-						<button onClick={() => this.handleClose()}>
-							Close
-						</button>
-						<button onClick={() => this.handleHome()}>
-							Home
-						</button>
-					</div>
-				</div>
-			</div>
-		);
-	}
-}
+import ColorPicker from './game/ColorPicker';
+import EndModal from './game/EndModal';
 
 class Game extends Component {
 	constructor(props) {
 		super(props);
 		const gameData = props.gameData;
-		const squares = Array(gameData.width * gameData.height).fill(gameData.useHcpRules);
+		const squares = Array(gameData.width * gameData.height).fill(gameData.blankColor);
 		this.state = {
 			name: gameData.name,
 			width: gameData.width,
@@ -91,7 +28,6 @@ class Game extends Component {
 			showEndModal: false,
 		};
 
-		console.log(gameData)
 		//init row/col counts
 		this.state.rowCounts = Array.from({length: gameData.height}, (x,r) => {
 			const row = this.state.solSquares.slice(r*gameData.width, (r+1) * gameData.width);
@@ -129,26 +65,41 @@ class Game extends Component {
 		return true;
 	}
 
+	componentDidMount() {
+		//check too see if any rows/cols are already completed
+		this.updateRowCompleted(0, this.state.height);
+		this.updateColCompleted(0, this.state.width);
+	}
+
 	//checks if game is finished
 	checkFinished() {
+		//we only want to run this code once on finish
+		if(this.state.isFinished) {
+			return;
+		}
 		if(this.state.rowCompleted.reduce((acc, val) => acc && val, true) &&
 		   this.state.colCompleted.reduce((acc, val) => acc && val, true)) {
 			this.setState({
 				isFinished: true,
 				showEndModal: true,
 			});
+			this.props.onSolve();
 		}
 	}
 
-	updateRowCompleted(r) {
+	//checks the given range of rows for completeness
+	//defaults to just checking 1
+	updateRowCompleted(rStart, num = 1) {
 		const width = this.state.width;
-		const row = this.state.squares.slice(r*width, (r+1) * width);
-		const rowCount = getRowNumbers(this.props.blankColor, row, 
-			this.state.useHcpRules);
-		const target = this.state.rowCounts[r];
-		const same = this.countCheck(target, rowCount);
 		const rowCompleted = this.state.rowCompleted.slice();
-		rowCompleted[r] = same;
+		for(let r = rStart; r < rStart + num; r++) {
+			const row = this.state.squares.slice(r*width, (r+1) * width);
+			const rowCount = getRowNumbers(this.props.blankColor, row, 
+				this.state.useHcpRules);
+			const target = this.state.rowCounts[r];
+			const same = this.countCheck(target, rowCount);
+			rowCompleted[r] = same;
+		}
 		this.setState({
 			rowCompleted: rowCompleted,
 		}, () => {
@@ -156,21 +107,26 @@ class Game extends Component {
 		});
 	}
 
-	updateColCompleted(c) {
+	//checks the given range of columns for completeness
+	//defaults to just checking 1
+	updateColCompleted(cStart, num = 1) {
 		const width = this.state.width;
-		const col = this.state.squares.filter((sq, index) => {
-			return index % width === c;
-		});
-		const colCount = getRowNumbers(this.props.blankColor, col, 
-			this.state.useHcpRules);
-		const target = this.state.colCounts[c];
-		const same = this.countCheck(target, colCount);
 		const colCompleted = this.state.colCompleted.slice();
-		colCompleted[c] = same;
+		for(let c = cStart; c < cStart + num; c++) {
+			const col = this.state.squares.filter((sq, index) => {
+				return index % width === c;
+			});
+			const colCount = getRowNumbers(this.props.blankColor, col, 
+				this.state.useHcpRules);
+			const target = this.state.colCounts[c];
+			const same = this.countCheck(target, colCount);
+			colCompleted[c] = same;
+		}
 		this.setState({
 			colCompleted: colCompleted,
 		}, () => {
-			this.checkFinished()
+			//we're already calling this in the row check
+			//this.checkFinished()
 		});
 	}
 
@@ -200,13 +156,6 @@ class Game extends Component {
 			this.updateRowCompleted(row);
 			const col = i % this.state.width;
 			this.updateColCompleted(col);
-		});
-	}
-
-	handleFinish(board) {
-		this.setState({
-			isFinished: true,
-			showEndModal: true,
 		});
 	}
 
