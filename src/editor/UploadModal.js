@@ -57,7 +57,8 @@ class UploadModal extends Component {
 			<div className="modal-backdrop">
 				<div className="modal">
 					{this.renderForm()}
-					<div className="modal-footer">
+					<div style={{marginTop: '8px'}}
+						className="modal-footer">
 						<button 
 							onClick={() => this.props.onClose()}
 						>
@@ -65,7 +66,7 @@ class UploadModal extends Component {
 						</button>
 						<button 
 							onClick={() => this.handleSubmit()}
-							enabled={this.props.isLoggedIn}
+							disabled={!this.props.isLoggedIn}
 						>
 							Submit
 						</button>

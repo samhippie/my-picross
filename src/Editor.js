@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
+import { Redirect } from 'react-router';
 import Board from './Board.js';
 import { getRowNumbers } from './Board.js';
 import './game.css';
-import SizeInput from './editor/SizeInput.js';
-import ColorModal from './editor/ColorModal.js';
-import ColorPicker from './editor/ColorPicker.js';
-import ImportModal from './editor/ImportModal.js';
-import UploadModal from './editor/UploadModal.js';
+import SizeInput from './editor/SizeInput';
+import ColorModal from './editor/ColorModal';
+import ColorPicker from './editor/ColorPicker';
+import ImportModal from './editor/ImportModal';
+import UploadModal from './editor/UploadModal';
+import CompleteUploadModal from './editor/CompleteUploadModal.js';
+import firebase, { firestore } from './firebase';
 
 class Editor extends Component {
 	constructor(props) {
@@ -27,6 +30,9 @@ class Editor extends Component {
 			isImportModalOpen: false,
 			colorGen: colorGenerator(),
 			isUploadModalOpen: false,
+			isCompleteUploadModalOpen: false,
+			uploadedPid: null,
+			goHome: false,
 		}
 	}
 
@@ -173,26 +179,42 @@ class Editor extends Component {
 	}
 
 	handleUpload(username, name) {
-		//TODO
-		
-		//get all the important data together
-		const data = {
-			version: 1,
-			name: name,
-			width: this.state.width,
-			height: this.state.height,
-			colors: this.state.colors,
-			blankColor: this.state.blankColor,
-			useHcpRules: this.state.useHcpRules,
-			squares: this.state.squares,
-		};
-		//spit it out to console (for now)
-		const strData = JSON.stringify(data);
-		const encData = Buffer.from(strData).toString("base64");
-		console.log("begin data dump");
-		console.log(encData);
-		console.log("end data dump");
-		alert("dumped game data to console");
+		this.setState({
+			isUploadModalOpen: false,
+		}, () => {
+			//get all the important data together
+			const data = {
+				version: 1,
+				name: name,
+				width: this.state.width,
+				height: this.state.height,
+				colors: this.state.colors,
+				blankColor: this.state.blankColor,
+				useHcpRules: this.state.useHcpRules,
+				squares: this.state.squares,
+			};
+			const strData = JSON.stringify(data);
+			const encData = Buffer.from(strData).toString("base64");
+
+			//get the metadata together
+			const puzzleData = {
+				data: encData,
+				isHcp: this.state.useHcpRules,
+				name: name,
+				time: firebase.firestore.Timestamp.now(),
+				uid: this.props.user.uid,
+				username: username,
+			}
+
+			//upload it to firebase
+			firestore.collection('puzzles').add(puzzleData)
+				.then(docRef => {
+				this.setState({
+					isCompleteUploadModalOpen: true,
+					uploadedPid: docRef.id,
+				});
+			});
+		});
 	}
 
 	handleShowImport() {
@@ -313,6 +335,19 @@ class Editor extends Component {
 		);
 	}
 
+	renderCompleteUploadModal() {
+		return (
+			<CompleteUploadModal
+				show={this.state.isCompleteUploadModalOpen}
+				pid={this.state.uploadedPid}
+				onClose={() =>
+					this.setState({isCompleteUploadModalOpen: false})}
+				onHome={() =>
+					this.setState({goHome: true})}
+			/>
+		);
+	}
+
 	renderHcpToggle() {
 		return (
 			<form>
@@ -348,6 +383,10 @@ class Editor extends Component {
 
 
 	render() {
+		if(this.state.goHome) {
+			return <Redirect to="/"/>
+		}
+
 		return (
 			<div>
 				<div className="in-a-row">
@@ -367,6 +406,7 @@ class Editor extends Component {
 				{this.renderColorModal()}
 				{this.renderImportModal()}
 				{this.renderUploadModal()}
+				{this.renderCompleteUploadModal()}
 			</div>
 		);
 	}
