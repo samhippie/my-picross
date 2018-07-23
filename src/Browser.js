@@ -80,6 +80,7 @@ class Browser extends Component {
 		//no status if the user isn't logged in
 		if(!this.props.user) {
 			callback("");
+			return;
 		}
 
 		const statusRef = firestore.collection('userPuzzles')

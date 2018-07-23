@@ -13,6 +13,7 @@
 	outline: solid 1px black;
 	padding: 8px;
 	white-space: normal;
+	background-color: #CCCCCC;
 }
 
 .puzzle-status {
