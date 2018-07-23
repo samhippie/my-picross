@@ -164,7 +164,7 @@ class Main extends Component {
 							exact path="/editor" 
 							render={() => this.renderEditor()} />
 						<Route 
-							path="/play/:id" 
+							path="/play(/:id)?" 
 							component={Player}/>
 					</div>
 					<SignInModal

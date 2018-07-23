@@ -172,13 +172,13 @@ class Editor extends Component {
 		});
 	}
 
-	handleUpload() {
+	handleUpload(username, name) {
 		//TODO
 		
 		//get all the important data together
 		const data = {
 			version: 1,
-			name: this.state.name,
+			name: name,
 			width: this.state.width,
 			height: this.state.height,
 			colors: this.state.colors,
