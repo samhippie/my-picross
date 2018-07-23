@@ -17,21 +17,27 @@
 
 .puzzle-status {
 	min-width: 24px;
-	line-height: 24px;
+	line-height: 18px;
 	font-size: 18px;
-	padding: 16px;
+	padding: 8px;
 }
 
 .puzzle-text {
 	font-size: 18px;
 	max-width: 70%;
-	line-height: 24px;
-	padding: 16px;
+	line-height: 18px;
+	padding: 8px;
+}
+
+.puzzle-rules {
+	font-size: 12px;
+	line-height: 18px;
+	padding: 8px;
 }
 
 .puzzle-date {
 	font-size: 12px;
-	line-height: 24px;
-	padding: 16px;
+	line-height: 18px;
+	padding: 8px;
 	margin-left: auto;
 }

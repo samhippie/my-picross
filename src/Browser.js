@@ -46,8 +46,11 @@ class PuzzleEntry extends Component {
 				<div className="puzzle-text">
 					{this.props.name} by {this.props.username}
 				</div>
+				<div className="puzzle-rules">
+					{this.props.isHcp ? '(HCP)' : '(Vanilla)'}
+				</div>
 				<div className="puzzle-date">
-					{timestampToDateString(this.props.time)}
+					{this.props.time}
 				</div>
 			</div>
 		);
@@ -98,13 +101,19 @@ class Browser extends Component {
 
 	//loads more puzzles from firebase, stores it in this.state.puzzles
 	handleLoadMore() {
-		//TODO make this load the next 25, not just the first 25
+		const pageSize = 10;
 		this.setState({
 			isLoading: true,
 		}, () => {
 			const puzzlesRef = firestore.collection('puzzles');
 			const puzzles = this.state.puzzles.slice();
-			puzzlesRef.orderBy('time').limit(25).get().then(querySnapshot => {
+			//default to loading the first page
+			let query = puzzlesRef.orderBy('time', 'desc').limit(pageSize);
+			//if we already have some puzzles, load the puzzles after that one
+			if(this.state.puzzles.length !== 0) {
+				query = query.startAfter(puzzles[puzzles.length-1].time);
+			}
+			query.get().then(querySnapshot => {
 				querySnapshot.forEach(doc => {
 					const data = doc.data();
 					const puzzle = {
@@ -113,6 +122,7 @@ class Browser extends Component {
 						username: data.username,
 						uid: data.uid,
 						time: data.time,
+						isHcp: data.isHcp,
 					}
 					puzzles.push(puzzle);
 				});
@@ -139,6 +149,7 @@ class Browser extends Component {
 					name={puzzle.name}
 					username={puzzle.username}
 					time={timestampToDateString(puzzle.time)}
+					isHcp={puzzle.isHcp}
 					getStatus={(c) => this.getPuzzleStatus(puzzle.pid, c)}
 					onClick={() => this.handlePuzzleClick(puzzle.pid)}
 				/>
@@ -199,7 +210,8 @@ class Browser extends Component {
 }
 
 function timestampToDateString(time) {
-	return "YYYY-MM-DD"
+	const date = time.toDate();
+	return date.toLocaleDateString();
 }
 
 export default Browser;
