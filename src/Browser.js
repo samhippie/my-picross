@@ -1,16 +1,31 @@
 import React, { Component } from 'react';
 import { Redirect } from 'react-router';
-import firebase from './firebase';
+import { firestore } from './firebase';
 import './browser.css';
 
 class PuzzleEntry extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			status: null,
+		};
+	}
+
+	componentDidMount() {
+		//load the status of this puzzle on load
+		this.props.getStatus((status) => {
+			this.setState({
+				status: status,
+			});
+		});
+	}
 
 	//renders the symbols showing if the puzzle has been seen or solved
 	renderStatus() {
 		let className = "";
-		if(this.props.status === "seen") {
+		if(this.state.status === "seen") {
 			className="fas fa-eye";
-		} else if(this.props.status === "solved") {
+		} else if(this.state.status === "solved") {
 			className="fas fa-check";
 		}
 
@@ -49,16 +64,36 @@ class Browser extends Component {
 			loadPuzzle: null,
 			isLoading: true,
 		};
-
-		this.db = firebase.firestore();
-		this.db.settings({
-			timestampsInSnapshots: true,
-		});
 	}
 
 	componentDidMount() {
 		//load the first set of puzzles on load
 		this.handleLoadMore();
+	}
+
+	//returns the puzzle status for the user
+	//i.e. whether it's been solved, seen, or is new
+	getPuzzleStatus(pid, callback) {
+		//no status if the user isn't logged in
+		if(!this.props.user) {
+			callback("");
+		}
+
+		const statusRef = firestore.collection('userPuzzles')
+			.doc(this.props.user.uid)
+			.collection('status')
+			.doc(pid);
+
+		statusRef.get().then(doc => {
+			const data = doc.data();
+			if(data.solved) {
+				callback("solved");
+			} else if(data.seen) {
+				callback("seen");
+			} else {
+				callback("");
+			}
+		});
 	}
 
 	//loads more puzzles from firebase, stores it in this.state.puzzles
@@ -67,7 +102,7 @@ class Browser extends Component {
 		this.setState({
 			isLoading: true,
 		}, () => {
-			const puzzlesRef = this.db.collection('puzzles');
+			const puzzlesRef = firestore.collection('puzzles');
 			const puzzles = this.state.puzzles.slice();
 			puzzlesRef.orderBy('time').limit(25).get().then(querySnapshot => {
 				querySnapshot.forEach(doc => {
@@ -96,7 +131,6 @@ class Browser extends Component {
 	}
 
 	renderPuzzleEntry(puzzle) {
-		console.log("puzzle", puzzle);
 		return (
 			<li
 				key={puzzle.pid}
@@ -105,7 +139,7 @@ class Browser extends Component {
 					name={puzzle.name}
 					username={puzzle.username}
 					time={timestampToDateString(puzzle.time)}
-					status={"solved"}
+					getStatus={(c) => this.getPuzzleStatus(puzzle.pid, c)}
 					onClick={() => this.handlePuzzleClick(puzzle.pid)}
 				/>
 			</li>
@@ -138,7 +172,7 @@ class Browser extends Component {
 
 	renderLoadMoreButton() {
 		if(this.state.isLoading) {
-			return <i className="fas fa-spinner fa-spin" i/>
+			return <i className="fas fa-spinner fa-spin" />
 		}
 
 		return (

@@ -130,6 +130,23 @@ class Main extends Component {
 		);
 	}
 
+	renderPlayer(match) {
+		return (
+			<Player
+				match={match}
+				user={this.state.user}
+			/>
+		);
+	}
+
+	renderBrowser() {
+		return (
+			<Browser
+				user={this.state.user}
+			/>
+		);
+	}
+
 	render() {
 		return (
 			<HashRouter>
@@ -159,13 +176,13 @@ class Main extends Component {
 					<div className="content">
 						<Route 
 							exact path="/" 
-							component={Browser}/>
+							render={() => this.renderBrowser()}/>
 						<Route 
 							exact path="/editor" 
 							render={() => this.renderEditor()} />
 						<Route 
-							path="/play(/:id)?" 
-							component={Player}/>
+							path="/play/:id" 
+							render={({match}) => this.renderPlayer(match)}/>
 					</div>
 					<SignInModal
 						show={this.state.isShowingAuthModal}

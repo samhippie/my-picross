@@ -17,4 +17,10 @@ const config = {
 };
 firebase.initializeApp(config);
 
-export {firebase as default, firebaseui};
+const firestore = firebase.firestore();
+//use new timestamp settings, need to disable a warning
+firestore.settings({
+		timestampsInSnapshots: true,
+});
+
+export {firebase as default, firebaseui, firestore};
