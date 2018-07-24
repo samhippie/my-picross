@@ -8,6 +8,14 @@ h1, h2, p, ul, li, label {
 	font-family: sans-serif;
 }
 
+button {
+	background-color: #CCCCCC;
+	font-weight: bold;
+	padding: 8px;
+	margin: 8px;
+	border: none;
+}
+
 .active-link {
 	background-color: #CCCCCC;
 }
@@ -59,31 +67,10 @@ ul.header li a {
 	margin-bottom: 10px;
 }
 
-.board {
-	/*
-	display: table;
-	white-space: nowrap;
-	overflow: auto;
-	*/
-}
-
 .board-row {
-	/*
-	display: table-row;
-	white-space: nowrap;
-	overflow-x: scroll;
-	*/
 	display: flex;
 	flex-direction: row;
 }
-
-/*
-.board-row:after {
-	clear: both;
-	content: "";
-	display: table;
-}
-*/
 
 .square {
 	background: #FFFFFF;
@@ -92,6 +79,7 @@ ul.header li a {
 	font-weight: bold;
 	line-height: 34px;
 	height: 34px;
+	margin: 0;
 	margin-right: -1px;
 	margin-top: -1px;
 	padding: 0;
@@ -116,17 +104,12 @@ ul.header li a {
 	padding-right: 4px;
 	padding-left: 4px;
 	margin: 0;
-	/*list-style-position: outside;*/
 	display: inline-block;
 	text-align: center;
 	text-decoration: none;
 }
 
 .count-square-col {
-	/*
-	background: #DDDDDD;
-	border: 1px solid #000000;
-	*/
 	float: left;
 	font-size: 18px;
 	font-weight: normal;
@@ -153,10 +136,6 @@ ul.header li a {
 }
 
 .count-square-row {
-	/*
-	background: #DDDDDD;
-	border: 1px solid #000000;
-	*/
 	font-size: 18px;
 	font-weight: normal;
 	line-height: 34px;

@@ -10,7 +10,6 @@
 	display: flex;
 	width: 90%;
 	flex-direction: row;
-	outline: solid 1px black;
 	padding: 8px;
 	white-space: normal;
 	background-color: #CCCCCC;
