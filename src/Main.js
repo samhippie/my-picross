@@ -96,29 +96,23 @@ class Main extends Component {
 			return (
 				<div className="log-in">
 					<div className="in-a-row">
-						<div>
+						<div className="log-in-text">
 							{this.state.user.displayName}
 						</div>
-						<div 
-							style={{
-								'cursor': 'pointer',
-								'paddingLeft': '8px',
-							}}
-							onClick={() => this.handleLogOut()}>
-							(Log Out)
-						</div>
+						<button onClick={() => this.handleLogOut()}>
+							Log Out
+						</button>
 					</div>
 				</div>
 			);
 		}
 
 		return (
-			<div 
-				style={{'cursor': 'pointer'}}
+			<button 
 				onClick={() => this.handleLogIn()}
 				className="log-in">
 				Log In
-			</div>
+			</button>
 		);
 	}
 

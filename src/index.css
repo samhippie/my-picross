@@ -28,10 +28,23 @@ ul.header li {
 
 .log-in {
 	float: right;
+	/*
 	padding: 20px;
+	*/
+	height: 100%;
 	display: flex;
 	flex-direction: row;
 	cursor: default;
+}
+
+.log-in-text {
+	text-align: center;
+	margin-top: auto;
+	margin-bottom: auto;
+}
+
+.log-in button {
+	margin-bottom: auto;
 }
 
 .in-a-row {
@@ -173,3 +186,16 @@ ul.header li a {
 	margin-left: 20px;
 }
 
+.firebaseui-idp-list {
+	list-style-type: none;
+}
+
+/*the long version of this text is visible and
+ * works better on its own
+ *
+ * with this visible, the whole text renders as
+ * Sign in with GoogleGoogle
+ */
+.firebaseui-idp-text-short {
+	visibility: collapse
+}
