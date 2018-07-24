@@ -4,7 +4,6 @@ import { firestore } from './firebase';
 import './browser.css';
 import dataCache from './dataCache';
 
-
 class PuzzleEntry extends Component {
 	constructor(props) {
 		super(props);
@@ -59,13 +58,39 @@ class PuzzleEntry extends Component {
 	}
 }
 
+
+const SORT_DATE_ASC = 0;
+const SORT_DATE_DESC = 1;
+
+class OrderPicker extends Component {
+
+	handleChange(event) {
+		this.props.onSetOrder(event.target.value);
+	}
+
+	render() {
+		return (
+			<div className="order-picker">
+				Sort by 
+				<select 
+					value={this.props.order} 
+					onChange={(e) => this.handleChange(e)}
+				>
+					<option value={SORT_DATE_DESC}>Newest</option>
+					<option value={SORT_DATE_ASC}>Oldest</option>
+				</select>
+			</div>
+		);
+	}
+}
+
 class Browser extends Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
 			puzzles: [],
-			category: 0,
+			sortBy: SORT_DATE_DESC,
 			loadPuzzle: null,
 			isLoading: false,
 		};
@@ -131,10 +156,21 @@ class Browser extends Component {
 		this.setState({
 			isLoading: showLoad,
 		}, () => {
-			const puzzlesRef = firestore.collection('puzzles');
 			const puzzles = this.state.puzzles.slice();
 			//default to loading the first page
-			let query = puzzlesRef.orderBy('time', 'desc').limit(pageSize);
+			let query = firestore.collection('puzzles');
+			switch(this.state.sortBy) {
+				case SORT_DATE_ASC:
+					query = query.orderBy('time');
+					break;
+				case SORT_DATE_DESC:
+					query = query.orderBy('time', 'desc');
+					break;
+				default:
+					//if we end up here, let firebase sort by whatever
+					break;
+			}
+			query = query.limit(pageSize);
 			//if we already have some puzzles, load the puzzles after that one
 			if(this.state.puzzles.length !== 0) {
 				query = query.startAfter(puzzles[puzzles.length-1].time);
@@ -162,6 +198,17 @@ class Browser extends Component {
 		});
 	}
 
+	handleSort(order) {
+		//have to reload the puzzle list after changing order
+		this.setState({
+			sortBy: order,
+			puzzles: [],
+		}, () => {
+			dataCache.invalidatePuzzleList();
+			this.handleLoadMore();
+		});
+	}
+
 	handlePuzzleClick(pid) {
 		//the status of the puzzle will change, so invalidate it
 		dataCache.invalidateStatus(pid);
@@ -169,6 +216,16 @@ class Browser extends Component {
 			loadPuzzle: "/play/" + pid,
 		});
 	}
+
+	renderOrderPicker() {
+		return (
+			<OrderPicker 
+				order={this.state.sortBy}
+				onSetOrder={(o) => this.handleSort(o)}
+			/>
+		);
+	}
+
 
 	renderPuzzleEntry(puzzle) {
 		return (
@@ -232,6 +289,7 @@ class Browser extends Component {
 
 		return (
 			<div>
+				{this.renderOrderPicker()}
 				{this.renderPuzzleList()}
 				{this.renderLoadMoreButton()}
 			</div>
