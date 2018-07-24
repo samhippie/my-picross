@@ -5,13 +5,14 @@ import React, { Component } from 'react';
 import { Redirect } from 'react-router';
 import Game from './Game.js';
 import { firestore } from './firebase';
+import dataCache from './dataCache';
 
 class Player extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			goHome: false,
-			isSaving: false, // used to prevent navigation while we're doing something
+			isSaving: false,
 			game: {
 				loaded: false,
 				pid: this.props.match.params.id,
@@ -21,30 +22,53 @@ class Player extends Component {
 	}
 
 	componentDidMount() {
-		//load the given game
-		const puzzleRef = firestore.collection('puzzles')
-			.doc(this.state.game.pid);
-		puzzleRef.get().then( doc => {
-			const data = doc.data();
+		//load from cache if we can
+		const cached = dataCache.getPuzzle(this.state.game.pid);
+		if(cached !== null) {
 			this.setState({
 				game: {
 					loaded: true,
-					data: JSON.parse(atob(data.data)),
+					data: JSON.parse(atob(cached.data)),
 					pid: this.state.game.pid,
-					isSaving: true,
-				}
+				},
 			}, () => {
 				if(this.props.user) {
-					const statusRef = firestore.collection('userPuzzles')
-						.doc(this.props.user.uid)
-						.collection('status')
-						.doc(this.state.game.pid);
-					statusRef.set({seen: true}, {merge: true}).then(() => {
-						this.setState({
-							isSaving: false,
-						});
-					});
+					this.markPuzzleStatus({seen: true});
 				}
+			});
+		} else {
+			//load the given game from firebase
+			const puzzleRef = firestore.collection('puzzles')
+				.doc(this.state.game.pid);
+			puzzleRef.get().then( doc => {
+				const data = doc.data();
+				this.setState({
+					game: {
+						loaded: true,
+						data: JSON.parse(atob(data.data)),
+						pid: this.state.game.pid,
+					}
+				}, () => {
+					if(this.props.user) {
+						this.markPuzzleStatus({seen: true});
+					}
+				});
+			});
+		}
+	}
+
+	markPuzzleStatus(status) {
+		this.setState({
+			isSaving: true,
+		}, () => {
+			const statusRef = firestore.collection('userPuzzles')
+				.doc(this.props.user.uid)
+				.collection('status')
+				.doc(this.state.game.pid);
+			statusRef.set(status, {merge: true}).then(() => {
+				this.setState({
+					isSaving: false,
+				});
 			});
 		});
 	}
@@ -60,25 +84,7 @@ class Player extends Component {
 		if(!this.props.user) {
 			return;
 		}
-
-		//these nested callbacks are basically
-		//isSaving = true
-		//update backend
-		//isSaving = false
-		this.setState({
-			isSaving: true,
-		}, () => {
-			//set that the puzzle has been solved
-			const statusRef = firestore.collection('userPuzzles')
-				.doc(this.props.user.uid)
-				.collection('status')
-				.doc(this.state.game.pid);
-			statusRef.set({solved: true}, {merge: true}).then(() => {
-				this.setState({
-					isSaving: false,
-				});
-			});
-		});
+		this.markPuzzleStatus({solved: true});
 	}
 
 	render() {

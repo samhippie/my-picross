@@ -17,7 +17,7 @@ const config = {
 };
 firebase.initializeApp(config);
 
-const firestore = firebase.firestore();
+var firestore = firebase.firestore();
 //use new timestamp settings, need to disable a warning
 firestore.settings({
 		timestampsInSnapshots: true,

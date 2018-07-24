@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { Redirect } from 'react-router';
 import { firestore } from './firebase';
 import './browser.css';
+import dataCache from './dataCache';
+
 
 class PuzzleEntry extends Component {
 	constructor(props) {
@@ -65,13 +67,25 @@ class Browser extends Component {
 			puzzles: [],
 			category: 0,
 			loadPuzzle: null,
-			isLoading: true,
+			isLoading: false,
 		};
 	}
 
 	componentDidMount() {
-		//load the first set of puzzles on load
-		this.handleLoadMore();
+		const puzzleCache = dataCache.getPuzzleList();
+		if(puzzleCache.length === 0) {
+			//load the first set of puzzles on load
+			this.handleLoadMore();
+		} else {
+			//load puzzles from cache
+			this.setState({
+				puzzles: puzzleCache,
+			});
+		}
+	}
+
+	componentWillUnmount() {
+		dataCache.setPuzzleList(this.state.puzzles);
 	}
 
 	//returns the puzzle status for the user
@@ -83,6 +97,13 @@ class Browser extends Component {
 			return;
 		}
 
+		//return from the cache if we can
+		let cached = dataCache.getStatus(pid);
+		if(cached !== null) {
+			callback(cached);
+			return;
+		}
+
 		const statusRef = firestore.collection('userPuzzles')
 			.doc(this.props.user.uid)
 			.collection('status')
@@ -90,21 +111,25 @@ class Browser extends Component {
 
 		statusRef.get().then(doc => {
 			const data = doc.data();
+			let result;
 			if(data.solved) {
-				callback("solved");
+				result = "solved";
 			} else if(data.seen) {
-				callback("seen");
+				result = "seen";
 			} else {
-				callback("");
+				result = "";
 			}
+			dataCache.setStatus(pid, result);
+			callback(result);
 		});
 	}
 
 	//loads more puzzles from firebase, stores it in this.state.puzzles
-	handleLoadMore() {
+	//showLoad: should we show the load to the user?
+	handleLoadMore(showLoad = true) {
 		const pageSize = 10;
 		this.setState({
-			isLoading: true,
+			isLoading: showLoad,
 		}, () => {
 			const puzzlesRef = firestore.collection('puzzles');
 			const puzzles = this.state.puzzles.slice();
@@ -124,7 +149,9 @@ class Browser extends Component {
 						uid: data.uid,
 						time: data.time,
 						isHcp: data.isHcp,
+						data: data.data,
 					}
+					dataCache.setPuzzle(doc.id, puzzle);
 					puzzles.push(puzzle);
 				});
 				this.setState({
@@ -136,6 +163,8 @@ class Browser extends Component {
 	}
 
 	handlePuzzleClick(pid) {
+		//the status of the puzzle will change, so invalidate it
+		dataCache.invalidateStatus(pid);
 		this.setState({
 			loadPuzzle: "/play/" + pid,
 		});
